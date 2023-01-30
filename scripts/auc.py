@@ -9,6 +9,7 @@ import os
 import logging
 import traceback
 import warnings
+from prompts import Prompts
 warnings.filterwarnings("ignore")
 
 # get today's date as format YYYY-MM-DD
@@ -215,6 +216,16 @@ class PlotSubject:
         pa_df = pa_df.sort_values(by=['timestamp'])
         return pa_df
 
+    def retrieve_prompts_df(self, subject, day):
+        prompt_obj = Prompts()
+        try:
+            all_messages = prompt_obj.get_all_messages(subject, day)
+            return all_messages
+        except Exception as e:
+            logger.error(f"retrieve_prompts_df(): No prompts on day {day} for {subject}")
+            logger.error(traceback.format_exc())
+            return pd.DataFrame(columns=['timestamp', 'epoch', 'message_type'])
+
     def plot_subject(self, subject, day):
         '''
         plot the subject's data
@@ -233,15 +244,22 @@ class PlotSubject:
         # convert to EST timezone
         auc_df['epoch'] = auc_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
 
+        # get the prompts_df
+        prompts_df = self.retrieve_prompts_df(subject, day)
+        # convert the epoch to datetime from epoch milliseconds
+        prompts_df['epoch'] = pd.to_datetime(prompts_df['epoch'], unit='ms')
+        print(prompts_df)
+
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
+        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
 
         # add the auc_df to the plot
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
         # add the pa_df to the plot
         fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
-
+        # plot the prompts with x-axis as epoch and y-axis as message_type as a scatter plot
+        fig.add_trace(go.Scatter(x=prompts_df['epoch'], y=prompts_df['message_type'], mode='markers', name='Prompts'), row=3, col=1)
         # update the layout
         fig.update_layout(
             title=f"Subject {subject} on {day}",
@@ -265,4 +283,6 @@ class PlotSubject:
         
 
 test = PlotSubject()
-test.plot_subject('user01', '2023-01-26')
+test.plot_subject('user01', '2023-01-27')
+# test.plot_subject('user01', '2023-01-28')
+# test.plot_subject('user01', '2023-01-29')

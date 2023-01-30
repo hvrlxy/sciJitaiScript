@@ -164,7 +164,7 @@ def unzip_logs_watch_folder(subject:str, date:str):
 
 
 def unzip_all():
-    subject_list = ['user01', 'user02', 'user03']
+    subject_list = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user08', 'user09', 'user10']
 
     # get a list of all the dates from 10 days ago to today
     date_list = [datetime.datetime.now() - datetime.timedelta(days=x) for x in range(0, 10)]
@@ -179,3 +179,5 @@ def unzip_all():
                 print(traceback.format_exc())
                 print(f'Error unzipping {subject} on {date}')
                 pass
+
+unzip_all()

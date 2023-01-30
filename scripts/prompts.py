@@ -82,7 +82,7 @@ class Prompts:
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_goal_settings_df(): Common folder not found in subject logs-watch folder")
-            raise ValueError("read_goal_settings_df(): Common folder not found in subject logs-watch folder")
+            raise ValueError("read_goal_settings_df(): Common folder not found in subject logs-watch folder with path: " + common_folder_path)
 
         # search for the Watch-GoalSettingsEMA.log.csv file inside the Common folder
         goal_settings_file_path = common_folder_path + 'Watch-GoalSettingsEMA.log.csv'
@@ -333,7 +333,7 @@ class Prompts:
                 continue
 
 
-test = Prompts()
-print(
-    test.process_all_user('2023-01-26')
-)
+# test = Prompts()
+# print(
+#     test.read_all_message_df('user01', '2023-01-27')
+# )
