@@ -4,7 +4,8 @@ import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as subplots
-from unzip_all import unzip_logs_watch_folder
+from unzip_all import UnZip
+from schedule import Schedule
 import os
 import logging
 import traceback
@@ -48,13 +49,19 @@ class PlotSubject:
         # initialize the schedule path
         self.FIGURES_PATH = self.ROOT_DIR + '/figures/auc/'
 
+        # initialize the unzip class
+        self.unzip = UnZip()
+
+        # initiahe the schedule class
+        self.schedule = Schedule()
+
     def impute_auc_df(self, df):
         '''
         impute the auc dataframe with NANs value in between datapoints 1 minutes apart
         :param df: pd.DataFrame
         :return: pd.DataFrame
         '''
-        
+        # print(df)
         # sort the dataframe by the time colume
         df.sort_values(by=['epoch'], inplace=True)
         # reset the index
@@ -79,12 +86,12 @@ class PlotSubject:
                         break
                     # append the new row to the dataframe, in between the two times
                     df.loc[len(df)] = [time1, np.nan]
-                    # sort the dataframe by the time colume
-                    df.sort_values(by=['epoch'], inplace=True)
-                    # reset the index
-                    df.reset_index(inplace=True)
-                    # drop the old index column
-                    df.drop(columns='index', inplace=True)
+                # sort the dataframe by the time colume
+                df.sort_values(by=['epoch'], inplace=True)
+                # reset the index
+                df.reset_index(inplace=True)
+                # drop the old index column
+                df.drop(columns='index', inplace=True)
         # return the dataframe and the total number of data points
         return df
 
@@ -115,7 +122,7 @@ class PlotSubject:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_auc_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -148,6 +155,8 @@ class PlotSubject:
         auc_df = auc_df[['epoch', 'AUC']]
         # sort the dataframe by epoch
         auc_df = auc_df.sort_values(by=['epoch'])
+        # remove NaN values
+        auc_df = auc_df.dropna()
         auc_df = self.impute_auc_df(auc_df)
         return auc_df
 
@@ -179,7 +188,7 @@ class PlotSubject:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_pa_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -219,7 +228,7 @@ class PlotSubject:
     def retrieve_prompts_df(self, subject, day):
         prompt_obj = Prompts()
         try:
-            all_messages = prompt_obj.get_all_messages(subject, day)
+            all_messages = prompt_obj.read_all_message_df(subject, day)
             return all_messages
         except Exception as e:
             logger.error(f"retrieve_prompts_df(): No prompts on day {day} for {subject}")
@@ -248,28 +257,69 @@ class PlotSubject:
         prompts_df = self.retrieve_prompts_df(subject, day)
         # convert the epoch to datetime from epoch milliseconds
         prompts_df['epoch'] = pd.to_datetime(prompts_df['epoch'], unit='ms')
-        print(prompts_df)
+        # convert to EST timezone
+        prompts_df['epoch'] = prompts_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+
+        # get the schedule_df
+        try:
+            schedule_df = self.schedule.process_schedule_generation(subject, day)
+            # get message_note from message_type goal_settings
+            goal_type = schedule_df[schedule_df['message_type'] == 'goal_settings']['message_note'].values[0]
+            # get message_note from message_type first_jitai
+            jitai1 = schedule_df[schedule_df['message_type'] == 'first_jitai']['message_note'].values[0]
+            # get message_note from message_type second_jitai
+            jitai2 = schedule_df[schedule_df['message_type'] == 'second_jitai']['message_note'].values[0]
+            # convert the start_prompt_epoch to datetime from epoch milliseconds
+            schedule_df['start_prompt_epoch'] = pd.to_datetime(schedule_df['start_prompt_epoch'], unit='ms')
+            # convert to EST timezone
+            schedule_df['start_prompt_epoch'] = schedule_df['start_prompt_epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+            # replace the entry of message_type with first_jitai to jitai1
+            schedule_df['message_type'] = schedule_df['message_type'].replace('first_jitai', 'jitai1')
+            # replace the entry of message_type with second_jitai to jitai2
+            schedule_df['message_type'] = schedule_df['message_type'].replace('second_jitai', 'jitai2')
+            # replace the entry of message_type with eod_message to eod
+            schedule_df['message_type'] = schedule_df['message_type'].replace('eod_message', 'eod')
+        except Exception as e:
+            goal_type = 'check if Common folder exists'
+            jitai1 = 'N/A'
+            jitai2 = 'N/A'
+            logger.error(f"plot_subject(): No schedule on day {day} for {subject}")
+            logger.error(traceback.format_exc())
+            schedule_df = pd.DataFrame(columns=['start_prompt_epoch', 'message_type'])
 
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
+        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
 
-        # add the auc_df to the plot
-        fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
+        # add the auc_df to the plot, color the area under the curve
+        # fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', fill='tozeroy', name='AUC'), row=1, col=1)
         # add the pa_df to the plot
-        fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
-        # plot the prompts with x-axis as epoch and y-axis as message_type as a scatter plot
-        fig.add_trace(go.Scatter(x=prompts_df['epoch'], y=prompts_df['message_type'], mode='markers', name='Prompts'), row=3, col=1)
-        # update the layout
+        # fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
+        fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'],mode='lines', fill='tozeroy', name='PA'), row=2, col=1)
+
+        # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
+        for index, row in schedule_df.iterrows():
+            fig.add_vrect(x0=row['start_prompt_epoch'], x1=row['start_prompt_epoch'], row=1, col=1, line_width=1.5, annotation_text=row['message_type'], 
+                annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', line_color='green')
+            fig.add_vrect(x0=row['start_prompt_epoch'], x1=row['start_prompt_epoch'], row=2, col=1, line_width=1.5, annotation_text=row['message_type'], 
+                annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', line_color='green')
+
+        # did the same for the prompts_df but no annotation and different edge color
+        for index, row in prompts_df.iterrows():
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
+
+        # create a subtitle for the entire plot
         fig.update_layout(
-            title=f"Subject {subject} on {day}",
-            height=1000,
+            title=go.layout.Title(
+                text=f"Subject {subject} for day {day} <br><sup>GOAL: {goal_type}, JITAI1: {jitai1}, JITAI2: {jitai2}</sup>",
+                xref="paper",
+                x=0
+            ),
+            height=700,
             width=1200
         )
-
-        # show the plot
-        # fig.show()
-
         # check if the date folder exists in the figures folder
         if not os.path.exists(self.FIGURES_PATH + day):
             # create the date folder
@@ -283,6 +333,6 @@ class PlotSubject:
         
 
 test = PlotSubject()
-test.plot_subject('user01', '2023-01-27')
-# test.plot_subject('user01', '2023-01-28')
-# test.plot_subject('user01', '2023-01-29')
+test.plot_subject('user01', '2023-01-30')
+test.plot_subject('user02', '2023-01-30')
+test.plot_subject('user03', '2023-01-30')

@@ -1,0 +1,4 @@
+timestamp,epoch,message_type
+Mon Jan 30 09:29:35 EST 2023,1675088975497,goal_settings
+Mon Jan 30 09:40:33 EST 2023,1675089633300,goal_settings
+Mon Jan 30 20:45:48 EST 2023,1675129548017,eod

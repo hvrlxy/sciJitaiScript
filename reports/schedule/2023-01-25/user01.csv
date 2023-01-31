@@ -1,5 +1,5 @@
-user_id,date,wake_time,week,day,message_type,message_note,start_prompt
-user01,2023-01-25,08:00,0,3,goal_settings,STANDARD_GOAL,09:18
-user01,2023-01-25,08:00,0,3,first_jitai,TO_ACHIEVE_MESSAGE,10:56
-user01,2023-01-25,08:00,0,3,second_jitai,ACHIEVED_MESSAGE,15:06
-user01,2023-01-25,08:00,0,3,eod_message,,19:00
+user_id,date,wake_time,week,day,message_type,message_note,start_prompt,start_prompt_epoch
+user01,2023-01-25,08:00,0,3,goal_settings,STANDARD_GOAL,09:18,1674656281300
+user01,2023-01-25,08:00,0,3,first_jitai,TO_ACHIEVE_MESSAGE,10:56,1674662161300
+user01,2023-01-25,08:00,0,3,second_jitai,ACHIEVED_MESSAGE,15:06,1674677161300
+user01,2023-01-25,08:00,0,3,eod_message,,19:00,1674691201300

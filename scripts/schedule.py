@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime
-from unzip_all import unzip_logs_watch_folder
+from unzip_all import UnZip
 import os
 import logging
 import traceback
@@ -42,6 +42,9 @@ class Schedule:
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/schedule/'
 
+        # initialize the unzip class
+        self.unzip = UnZip()
+
     def generate_day_schedule(self, subject: str, day: str):
         subject_full = subject + '@scijitai_com'
         # check if the day format is YYYY-MM-DD by converting it to datetime
@@ -63,7 +66,7 @@ class Schedule:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("generate_day_schedule(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -137,8 +140,7 @@ class Schedule:
         except Exception as e:
             logger.error(f"extract_info_from_schedule_df(): Error getting {key_word}")
             logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error getting {key_word}')
+            return "N/A"
 
         return value
     
@@ -182,6 +184,7 @@ class Schedule:
         # convert the wake_time and the start_prompt to datetime string with format HH:MM from epoch time in milliseconds
         logger.info(f"process_schedule_generation(): Converting the wake_time and the start_prompt to datetime string with format HH:MM from epoch time for {subject} on {day}")
         schedule_df['wake_time'] = schedule_df['wake_time'].apply(lambda x: datetime.datetime.fromtimestamp(int(x)/1000).strftime('%H:%M'))
+        schedule_df['start_prompt_epoch'] = schedule_df['start_prompt']
         schedule_df['start_prompt'] = schedule_df['start_prompt'].apply(lambda x: datetime.datetime.fromtimestamp(int(x)/1000).strftime('%H:%M'))
         logger.info(f"process_schedule_generation(): Converting the wake_time and the start_prompt to datetime string with format HH:MM from epoch time for {subject} on {day} done")
 
@@ -233,8 +236,3 @@ class Schedule:
         logger.info(f"process_all_user(): Saving schedule_df to a csv file done")
 
         return schedule_df
-
-test = Schedule()
-print(
-    test.process_all_user('2023-01-25', user_list=['user01', 'user03', 'user02'])
-)

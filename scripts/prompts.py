@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime
-from unzip_all import unzip_logs_watch_folder
+from unzip_all import UnZip
 import os
 import logging
 import traceback
@@ -42,6 +42,9 @@ class Prompts:
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/prompts/'
 
+        # initialize the unzip class
+        self.unzip = UnZip()
+
     def read_goal_settings_df(self, subject, day):
         '''
         read the goal settings df for a subject
@@ -69,7 +72,7 @@ class Prompts:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_goal_settings_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -137,7 +140,7 @@ class Prompts:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_jitai1_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -199,7 +202,7 @@ class Prompts:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_jitai2_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -261,7 +264,7 @@ class Prompts:
 
         # unzipping the logs-watch folder
         try:
-            unzip_logs_watch_folder(subject, day)
+            self.unzip.unzip_logs_watch_folder(subject, day)
         except Exception as e:
             logger.error("read_eod_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
@@ -329,7 +332,7 @@ class Prompts:
             except Exception as e:
                 logger.error(f"process_all_user(): Error processing {user} on {day}")
                 logger.error(traceback.format_exc())
-                print(traceback.format_exc())
+                # print(traceback.format_exc())
                 continue
 
 
