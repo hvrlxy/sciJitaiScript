@@ -309,6 +309,15 @@ class PlotSubject:
         for index, row in prompts_df.iterrows():
             fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
             fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
+        
+        ### review if helpful for the plot
+        # add horizontal line to indicate the threshold for PA, show the overall PA for the day
+        ####pa_max = pa_df['pa'].max()
+        ####pa_threshold = 2000 #is this number accessible somewhere in the log files?
+        ####pa_annotation_text = "EOD PA Level: " + pa_max
+        ####fig.add_hline(y=pa_threshold, annotation_text=pa_annotation_text, annotation_position="top left", annotation_font_color="red", 
+        ####    line_dash="dot", row=1, col=1, line_color="gray", line_width=1)
+
 
         # create a subtitle for the entire plot
         fig.update_layout(
