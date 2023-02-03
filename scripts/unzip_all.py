@@ -165,7 +165,7 @@ class UnZip:
 
 
     def unzip_all(self):
-        subject_list = ['user01', 'user02', 'user03']
+        subject_list = ['user03', 'user02', 'user01']
 
         # get a list of all the dates from 10 days ago to today
         date_list = [datetime.datetime.now() - datetime.timedelta(days=x) for x in range(0, 10)]

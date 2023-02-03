@@ -263,6 +263,10 @@ class PlotSubject:
         # get the schedule_df
         try:
             schedule_df = self.schedule.process_schedule_generation(subject, day)
+            # get the first item in the week column
+            week = schedule_df['week'].values[0]
+            # get the first item in the day column
+            dayIndex = schedule_df['day'].values[0]
             # get message_note from message_type goal_settings
             goal_type = schedule_df[schedule_df['message_type'] == 'goal_settings']['message_note'].values[0]
             # get message_note from message_type first_jitai
@@ -283,6 +287,8 @@ class PlotSubject:
             goal_type = 'check if Common folder exists'
             jitai1 = 'N/A'
             jitai2 = 'N/A'
+            week = 'N/A'
+            dayIndex = 'N/A'
             logger.error(f"plot_subject(): No schedule on day {day} for {subject}")
             logger.error(traceback.format_exc())
             schedule_df = pd.DataFrame(columns=['start_prompt_epoch', 'message_type'])
@@ -292,8 +298,8 @@ class PlotSubject:
         fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
 
         # add the auc_df to the plot, color the area under the curve
-        # fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', fill='tozeroy', name='AUC'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
+        # fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', fill='tozeroy', name='AUC'), row=1, col=1)
         # add the pa_df to the plot
         # fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
         fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'],mode='lines', fill='tozeroy', name='PA'), row=2, col=1)
@@ -313,7 +319,7 @@ class PlotSubject:
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
-                text=f"Subject {subject} for day {day} <br><sup>GOAL: {goal_type}, JITAI1: {jitai1}, JITAI2: {jitai2}</sup>",
+                text=f"Subject {subject} for day {day} <br><sup>GOAL: {goal_type}, JITAI1: {jitai1}, JITAI2: {jitai2}, WEEK: {week}, DAY_INDEX: {dayIndex}</sup>",
                 xref="paper",
                 x=0
             ),
@@ -333,6 +339,6 @@ class PlotSubject:
         
 
 test = PlotSubject()
-test.plot_subject('user01', '2023-01-30')
-test.plot_subject('user02', '2023-01-30')
-test.plot_subject('user03', '2023-01-30')
+test.plot_subject('user01', '2023-02-02')
+test.plot_subject('user02', '2023-02-02')
+test.plot_subject('user03', '2023-02-02')

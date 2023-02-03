@@ -36,9 +36,9 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # get yesterday's date as format YYYY-MM-DD
-yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+yesterday = datetime.datetime.today()
 # get a list of the last 10 days from yesterday with format YYYY-MM-DD
-last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, 10)]
+last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, 3)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 
 # TODO: list of subjects

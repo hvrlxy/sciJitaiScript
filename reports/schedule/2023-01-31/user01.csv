@@ -1,0 +1,5 @@
+user_id,date,wake_time,week,day,message_type,message_note,start_prompt,start_prompt_epoch
+user01,2023-01-31,07:45,6,2,goal_settings,STANDARD_GOAL,09:39,1675175989208
+user01,2023-01-31,07:45,6,2,first_jitai,NO_MESSAGE,10:38,1675179529208
+user01,2023-01-31,07:45,6,2,second_jitai,TO_ACHIEVE_MESSAGE,14:34,1675193689208
+user01,2023-01-31,07:45,6,2,eod_message,,20:45,1675215949208
