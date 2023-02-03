@@ -164,13 +164,12 @@ class UnZip:
             return ValueError(f'Error reading file: {path_logs_watch} - Check if the file exists')
 
 
-    def unzip_all(self):
+    def unzip_all(self, days = 3):
         subject_list = ['user03', 'user02', 'user01']
 
         # get a list of all the dates from 10 days ago to today
-        date_list = [datetime.datetime.now() - datetime.timedelta(days=x) for x in range(0, 10)]
+        date_list = [datetime.datetime.now() - datetime.timedelta(days=x) for x in range(0, days)]
         date_list = [date.strftime('%Y-%m-%d') for date in date_list]
-        print(date_list)
 
         for subject in subject_list:
             for date in date_list:

@@ -2,12 +2,17 @@ from schedule import Schedule
 from unzip_all import UnZip
 from prompts import Prompts
 from auc import PlotSubject
+from auto_scp import AutoSCP
 import warnings
 import os
 import logging
 import datetime
 
 warnings.filterwarnings("ignore")
+
+khoury_id = '<khoury id>'
+ppk_password = '<password>'
+ppk_path = '<path to ppk file>'
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -40,9 +45,12 @@ yesterday = datetime.datetime.today()
 # get a list of the last 10 days from yesterday with format YYYY-MM-DD
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, 3)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
-
+print(last_10_days)
 # TODO: list of subjects
 subjects = ['user01', 'user02', 'user03']
+
+# initialize the auto scp class
+auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
 
 # initialize the schedule class
 schedule = Schedule()
@@ -55,6 +63,35 @@ prompts = Prompts()
 
 # initialize the plot subject class
 plot_subject = PlotSubject()
+
+# get the data from the server for the last 10 days
+for day in last_10_days:
+    for subject in subjects:
+        logger.info('Getting data for subject: ' + subject + ' for day: ' + day)
+        # get logs-watch 
+        try:
+            auto_scp.get_logs_watch(subject, day)
+        except Exception as e:
+            logger.error('Error getting logs-watcher logs for day: ' + day)
+            continue
+        logger.info('Finished getting data for subject: ' + subject + ' for day: ' + day)
+        try:
+            auto_scp.get_data(subject, day)
+        except Exception as e:
+            logger.error('Error getting data for day: ' + day)
+            continue
+        try:
+            auto_scp.get_logs(subject, day)
+        except Exception as e:
+            logger.error('Error getting logs for day: ' + day)
+            continue
+        # get data-watcher logs
+        try:
+            auto_scp.get_data_watch(subject, day)
+        except Exception as e:
+            logger.error('Error getting data-watcher logs for day: ' + day)
+            continue
+        print('Finished getting data for subject: ' + subject + ' for day: ' + day)
 
 # unzip all the files from the last 10 days
 unzip.unzip_all()
