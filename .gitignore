@@ -130,3 +130,5 @@ dmypy.json
 
 # raw data folder
 data/raw/
+reports/
+logs/
