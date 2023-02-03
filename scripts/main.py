@@ -10,9 +10,9 @@ import datetime
 
 warnings.filterwarnings("ignore")
 
-khoury_id = '<khoury id>'
-ppk_password = '<password>'
-ppk_path = '<path to ppk file>'
+khoury_id = 'hle5'
+ppk_password = 'lemyha00'
+ppk_path = '/Users/hale/.ssh/id_ed25519.ppk'
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
