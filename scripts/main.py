@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore")
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = '/Users/hale/.ssh/id_ed25519.ppk'
+nums_day = 4
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -24,7 +25,7 @@ if not os.path.exists(logs_path):
     os.makedirs(logs_path)
 
 
-# set up a logger for the schedule class
+# set up a logger for the main class
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -43,7 +44,7 @@ logger.addHandler(file_handler)
 # get yesterday's date as format YYYY-MM-DD
 yesterday = datetime.datetime.today()
 # get a list of the last 10 days from yesterday with format YYYY-MM-DD
-last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, 3)]
+last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 print(last_10_days)
 # TODO: list of subjects
@@ -94,7 +95,7 @@ for day in last_10_days:
         print('Finished getting data for subject: ' + subject + ' for day: ' + day)
 
 # unzip all the files from the last 10 days
-unzip.unzip_all()
+unzip.unzip_all(days=nums_day)
 
 # get the schedule for the last 10 days
 for day in last_10_days:

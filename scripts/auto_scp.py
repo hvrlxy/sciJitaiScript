@@ -30,6 +30,7 @@ class AutoSCP:
                 recursive=True)
 
         scp.close()
+        ssh.close()
 
     def get_logs(self, subject_id, date):
         ssh = paramiko.SSHClient()
@@ -51,6 +52,7 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/logs", 
                 recursive=True)
         scp.close()
+        ssh.close()
     def get_data(self, subject_id, date):
         ssh = paramiko.SSHClient()
 
@@ -71,6 +73,7 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/data", 
                 recursive=True)
         scp.close()
+        ssh.close()
     def get_data_watch(self, subject_id, date):
         ssh = paramiko.SSHClient()
 
@@ -91,3 +94,10 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/data-watch", 
                 recursive=True)
         scp.close()
+        ssh.close()
+
+# test
+# test = AutoSCP('hle5', 'lemyha00', '/Users/hale/.ssh/id_ed25519.ppk')
+# test.get_logs_watch('user01', '2023-02-03')
+# test.get_logs_watch('user02', '2023-02-03')
+# test.get_logs_watch('user03', '2023-02-03')
