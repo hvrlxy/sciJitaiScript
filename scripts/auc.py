@@ -334,11 +334,5 @@ class PlotSubject:
         # save the plot
         fig.write_html(self.FIGURES_PATH + day + '/' + subject + '.html')
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
-        fig.write_image(self.FIGURES_PATH + day + '/' + subject + '.png')
+        fig.write_image(self.FIGURES_PATH + day + '/' + subject + '.png', scale = 5)
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
-        
-
-test = PlotSubject()
-test.plot_subject('user01', '2023-02-02')
-test.plot_subject('user02', '2023-02-02')
-test.plot_subject('user03', '2023-02-02')
