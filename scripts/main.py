@@ -3,6 +3,7 @@ from unzip_all import UnZip
 from prompts import Prompts
 from auc import PlotSubject
 from auto_scp import AutoSCP
+from battery import Battery
 import warnings
 import os
 import logging
@@ -66,6 +67,9 @@ prompts = Prompts()
 # initialize the plot subject class
 plot_subject = PlotSubject()
 
+# initialize the battery class
+battery = Battery()
+
 # get the data from the server for the last 10 days
 for day in last_10_days:
     for subject in subjects:
@@ -123,4 +127,9 @@ for day in last_10_days:
         except Exception as e:
             logger.error('Error plotting subject: ' + subject + ' for day: ' + day)
             continue
-
+        
+        try:
+            battery.plot_battery(subject, day)
+        except Exception as e:
+            logger.error('Error plotting battery for subject: ' + subject + ' for day: ' + day)
+            continue
