@@ -133,3 +133,4 @@ data/raw/
 reports/*
 logs/*
 figures/*
+ssh/*

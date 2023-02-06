@@ -10,9 +10,9 @@ import datetime
 
 warnings.filterwarnings("ignore")
 
-khoury_id = 'hle5'
-ppk_password = 'lemyha00'
-ppk_path = '/Users/hale/.ssh/id_ed25519.ppk'
+khoury_id = '<your khoury id>'
+ppk_password = '<your ppk password>'
+ppk_path = '../ssh/id_ed25519.ppk'
 nums_day = 4
 
 # get today's date as format YYYY-MM-DD
