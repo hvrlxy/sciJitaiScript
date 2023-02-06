@@ -7,13 +7,15 @@ import warnings
 import os
 import logging
 import datetime
+import traceback
 
 warnings.filterwarnings("ignore")
 
-khoury_id = '<your khoury id>'
-ppk_password = '<your ppk password>'
-ppk_path = '../ssh/id_ed25519.ppk'
-nums_day = 4
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
+khoury_id = 'hle5'
+ppk_password = 'lemyha00'
+ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
+nums_day = 1
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -46,7 +48,6 @@ yesterday = datetime.datetime.today()
 # get a list of the last 10 days from yesterday with format YYYY-MM-DD
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
-print(last_10_days)
 # TODO: list of subjects
 subjects = ['user01', 'user02', 'user03']
 
@@ -73,6 +74,7 @@ for day in last_10_days:
         try:
             auto_scp.get_logs_watch(subject, day)
         except Exception as e:
+            print(traceback.format_exc())
             logger.error('Error getting logs-watcher logs for day: ' + day)
             continue
         logger.info('Finished getting data for subject: ' + subject + ' for day: ' + day)

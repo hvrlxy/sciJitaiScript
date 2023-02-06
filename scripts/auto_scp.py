@@ -95,9 +95,3 @@ class AutoSCP:
                 recursive=True)
         scp.close()
         ssh.close()
-
-# test
-# test = AutoSCP('hle5', 'lemyha00', '/Users/hale/.ssh/id_ed25519.ppk')
-# test.get_logs_watch('user01', '2023-02-03')
-# test.get_logs_watch('user02', '2023-02-03')
-# test.get_logs_watch('user03', '2023-02-03')

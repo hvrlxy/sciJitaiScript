@@ -159,10 +159,56 @@ class UnZip:
             self.unzip_raw_auc_file(path_logs_watch)
         except Exception as e:
             logger.error(traceback.format_exc())
-            print(traceback.format_exc())
             logger.error(f'Error reading file: {path_logs_watch} - Check if the file exists')
             return ValueError(f'Error reading file: {path_logs_watch} - Check if the file exists')
 
+    def unzip_data_watch_folder(self, subject:str, date:str):
+        '''
+        unzip all the phone logs folder
+        :param subject: str
+        :param date: str
+        :return: None
+        '''
+
+        # check if there is any zip file in the folder
+        path_data_watch = f'{DATA_PATH}{subject}@scijitai_com/data-watch/{date}/'
+        #add files in path_data_watch
+        files = os.listdir(path_data_watch)
+
+        # check if there is any files in the folder ending with zip
+        if not any([file.endswith('.zip') for file in files]):
+            logger.info(f'No zip file found for {subject} on {date}')
+            return
+        try:
+            logger.info(f'Unzipping data-watch folder for {subject} on {date}')
+            self.unzip_raw_auc_file(path_data_watch)
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error(f'Error reading file: {path_data_watch} - Check if the file exists')
+
+    def unzip_logs_folder(self, subject:str, date:str):
+        '''
+        unzip all the phone logs folder
+        :param subject: str
+        :param date: str
+        :return: None
+        '''
+
+        # check if there is any zip file in the folder
+        path_logs = f'{DATA_PATH}{subject}@scijitai_com/logs/{date}/'
+        #add files in path_logs
+        files = os.listdir(path_logs)
+
+        # check if there is any files in the folder ending with zip
+        if not any([file.endswith('.zip') for file in files]):
+            logger.info(f'No zip file found for {subject} on {date}')
+            return
+        try:
+            logger.info(f'Unzipping logs folder for {subject} on {date}')
+            self.unzip_raw_auc_file(path_logs)
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error(f'Error reading file: {path_logs} - Check if the file exists')
 
     def unzip_all(self, days = 3):
         subject_list = ['user03', 'user02', 'user01']
