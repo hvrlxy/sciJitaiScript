@@ -102,6 +102,11 @@ class Schedule:
         # reindex the schedule_generation_df
         schedule_generation_df = schedule_generation_df.reset_index(drop=True)
 
+        # get the index of the row with prefix schedule_generation:week
+        schedule_generation_index = schedule_generation_df[schedule_generation_df['message'].str.contains('schedule_generation:week')].index[0]
+        #remove all rows before the schedule_generation:week row
+        schedule_generation_df = schedule_generation_df[schedule_generation_index:]
+
         return schedule_generation_df
 
     def generate_schedule_retrieval_df(self, subject:str, date:str):
@@ -119,6 +124,10 @@ class Schedule:
         sensor_manager_service_df = pd.read_csv(sensor_manager_service_path, names=['timestamp', 'type', 'message', "unknown", "unknown2", "unknown3"])
         logger.info(f"generate_schedule_retrieval_df(): Reading Watch-SensorManagerService.log.csv file for {subject} on {date} done")
 
+        # get the index of the row with prefix schedule_generation:week
+        schedule_generation_index = sensor_manager_service_df[sensor_manager_service_df['message'].str.contains('schedule_generation:week')].index[0]
+        #remove all rows before the schedule_generation:week row
+        sensor_manager_service_df = sensor_manager_service_df[schedule_generation_index:]
         # filter out the rows start with schedule_retrieval in the message column
         logger.info(f"generate_schedule_retrieval_df(): Filtering out the rows start with schedule_retrieval in the message column for {subject} on {date}")
         schedule_retrieval_df = sensor_manager_service_df[sensor_manager_service_df['message'].str.startswith('schedule_retrieval')]
@@ -146,6 +155,7 @@ class Schedule:
     
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
+        # print(schedule_generation_df)
 
         # get the first item in the timestamp column
         timestamp = schedule_generation_df.iloc[0]['timestamp']

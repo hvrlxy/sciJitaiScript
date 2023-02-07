@@ -257,10 +257,5 @@ class Battery:
             reboot_list.extend(df['timestamp'].tolist())
         return reboot_list
 
-# test
-test = Battery()
-
-test.plotting_battery(subject='user01', date='2023-02-05')
-
 
     

@@ -111,6 +111,7 @@ class Prompts:
         # create a message_type column and set it to goal_settings
         goal_settings_df['message_type'] = 'goal_settings'
 
+
         return goal_settings_df
 
     def read_jitai1_df(self, subject, day):

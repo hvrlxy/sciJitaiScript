@@ -313,8 +313,8 @@ class PlotSubject:
 
         # did the same for the prompts_df but no annotation and different edge color
         for index, row in prompts_df.iterrows():
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=0.5, line_color='purple', line_dash='dashdot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
 
         # create a subtitle for the entire plot
         fig.update_layout(
