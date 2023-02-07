@@ -27,7 +27,6 @@ logs_path = os.path.dirname(os.path.abspath(__file__)) + '/..' + '/logs/' + toda
 if not os.path.exists(logs_path):
     os.makedirs(logs_path)
 
-
 # set up a logger for the main class
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
