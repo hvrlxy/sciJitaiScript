@@ -117,7 +117,7 @@ class Battery:
         processed_df = self.process_connectivity_df(connectivity_df=connectivity_df)
 
         reboot_list = self.get_reboot_time(subject=subject, date=date)
-        print(reboot_list)
+        screen_on_list = self.get_screen_on_time(subject=subject, date=date)
         
         # plot the battery level in a plotly figure with under the area shaded
         fig = px.line(battery_df, x='HEADER_TIME_STAMP', y='BATTERY_LEVEL', title=f'Battery Level for {subject} on {date}')
@@ -137,12 +137,25 @@ class Battery:
         # for each reboot time, add a vertical rectangle with width = 0
         for reboot_time in reboot_list:
             fig.add_vrect(x0=reboot_time, x1=reboot_time, line_width=1.5, annotation_text="phone rebooted", 
-                annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', line_color='black')
+                annotation_position="bottom right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', 
+                line_color='black')
+
+        # add a rectangle around the vertical line
+        fig.add_hrect(y0=110, y1=120, line_width=0, fillcolor="purple")
+        # for each screen on time, add a vertical line with width = 0
+        for screen_on_time in screen_on_list:
+            fig.add_shape(type="line", x0=screen_on_time, y0=110, x1=screen_on_time, y1=120, 
+            line=dict(color="yellow", width=1.5, dash='solid'), name = 'screen on')
+
+        # add annotations text to the top right corner outside the plot with test = 'screen on' and the direction of the text is normal
+        fig.add_annotation(x=1, y=1.1, xref='paper', yref='paper', text='screen on/off', showarrow=False, font=dict(size=10),
+            textangle=0)
         # give the plot a title
         fig.update_layout(
             title_text=f'Battery Level for {subject} on {date}',
             height=400,
-            width=1000
+            width=1000,
+            margin=dict(t=150)
             )
         # create a battery folder inside the figures folder if it doesn't exist
         if not os.path.exists(self.FIGURE_PATH + 'battery/' + date + '/'):
@@ -257,5 +270,31 @@ class Battery:
             reboot_list.extend(df['timestamp'].tolist())
         return reboot_list
 
-
-    
+    def get_screen_on_time(self, subject, date):
+        # unzip the logs folder
+        self.unzip.unzip_logs_watch_folder(subject=subject, date=date)
+        # initialize the logs path
+        logs_path = self.DATA_PATH + subject + '@scijitai_com/logs-watch/' + date + '/'
+        # get all the folders in the logs path
+        logs_folders = os.listdir(logs_path)
+        # only grab the folders that are not .zip
+        logs_folders = [folder for folder in logs_folders if not folder.endswith('.zip')]
+        screen_on_list = []
+        # loop through all the folders in the logs path
+        for folder in logs_folders:
+            # list all the files in the folder
+            files = os.listdir(logs_path + folder)
+            # only grab the file with the name SystemBroadcastReceiver.log.csv
+            csv_files = [file for file in files if file == 'Watch-EMAAlwaysOnService.log.csv']
+            if len(csv_files) == 0:
+                continue
+            # read the csv file
+            df = pd.read_csv(logs_path + folder + '/' + csv_files[0], names=['timestamp', 'info', 'message'])
+            # convert the timestamp to datetime
+            df['timestamp'] = pd.to_datetime(df['timestamp'], format='%a %b %d %H:%M:%S EST %Y')
+            # print(df)
+            # filter out the rows with message contains the string REBOOT
+            df = df[df['message'].str.contains('SCREEN_ON')]
+            # add the timestamp to the reboot_list
+            screen_on_list.extend(df['timestamp'].tolist())
+        return screen_on_list

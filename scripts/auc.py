@@ -221,8 +221,34 @@ class PlotSubject:
 
         # convert the timestamp to datetime from string
         pa_df['timestamp'] = pd.to_datetime(pa_df['timestamp'], format='%a %b %d %H:%M:%S %Z %Y')
+        # pa_df = self.process_pa_df(pa_df)
         # sort the pa_df by timestamp
-        pa_df = pa_df.sort_values(by=['timestamp'])
+        # pa_df = pa_df.sort_values(by=['timestamp'])
+        return pa_df
+
+    def process_pa_df(self, pa_df):
+        '''
+        process the pa_df
+        :param pa_df: pd.DataFrame
+        :return: pd.DataFrame
+        '''
+
+        # convert the timestamp to epoch time in milliseconds
+        pa_df['timestamp'] = pa_df['timestamp'].apply(lambda x: int(x.timestamp() * 1000))
+        # save the df to a test file
+        pa_df.to_csv(self.ROOT_DIR + '/test.csv')
+        # loop through the pa_df
+        for index, row in pa_df.iterrows():
+            # if index is 0, skip
+            if index == 0:
+                continue
+            # if the current epoch is the same as the previous epoch, increment the epoch time of the current row by 1
+            if row['timestamp'] == pa_df.iloc[index - 1]['timestamp']:
+                pa_df.at[index, 'timestamp'] += 30000
+        # convert the epoch time to datetime in EST
+        pa_df['timestamp'] = pa_df['timestamp'].apply(lambda x: datetime.datetime.fromtimestamp(x / 1000))
+        # convert to EDT
+        pa_df['timestamp'] = pa_df['timestamp'].apply(lambda x: x - datetime.timedelta(hours=4))
         return pa_df
 
     def retrieve_prompts_df(self, subject, day):
@@ -302,6 +328,9 @@ class PlotSubject:
         # fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', fill='tozeroy', name='AUC'), row=1, col=1)
         # add the pa_df to the plot
         # fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
+
+        # remove the row with even index in pa_df
+        # pa_df = pa_df[pa_df.index % 2 == 0]
         fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'],mode='lines', fill='tozeroy', name='PA'), row=2, col=1)
 
         # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
@@ -316,6 +345,8 @@ class PlotSubject:
             fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
             fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
 
+        # add a horizontal line at y=2000 and mark it as AUC threshold
+        fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
@@ -336,3 +367,6 @@ class PlotSubject:
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
         fig.write_image(self.FIGURES_PATH + day + '/' + subject + '.png', scale = 5)
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
+
+# test = PlotSubject() 
+# test.plot_subject('user01', '2023-02-08')
