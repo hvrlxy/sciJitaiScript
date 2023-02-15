@@ -210,20 +210,27 @@ class PlotSubject:
                 logger.error(f"read_pa_df(): Watch-PAMinutes.log.csv not found in logs-watch {folder}")
                 continue
             
-            # read the Watch-PAMinutes.log.csv file
-            df = pd.read_csv(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-PAMinutes.log.csv',
-                                header=None, names=['timestamp', 'type', 'pa'])
-
+            try:
+                # read the Watch-PAMinutes.log.csv file
+                df = pd.read_csv(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-PAMinutes.log.csv',
+                                    header=None, names=['timestamp', 'type', 'epoch', 'pa'])
+            except Exception as e:
+                continue
             pa_df = pa_df.append(df)
         
         # only takes the timestamp and pa columns
-        pa_df = pa_df[['timestamp', 'pa']]
-
-        # convert the timestamp to datetime from string
-        pa_df['timestamp'] = pd.to_datetime(pa_df['timestamp'], format='%a %b %d %H:%M:%S %Z %Y')
+        pa_df = pa_df[['epoch', 'pa']]
         # pa_df = self.process_pa_df(pa_df)
         # sort the pa_df by timestamp
-        # pa_df = pa_df.sort_values(by=['timestamp'])
+        pa_df = pa_df.sort_values(by=['epoch'])
+        # turn the epoch milliseconds to datetime
+        pa_df['timestamp'] = pd.to_datetime(pa_df['epoch'], unit='ms')
+        # remove epoch column
+        pa_df = pa_df.drop(columns=['epoch'])
+        # convert to EDT timezone
+        pa_df['timestamp'] = pa_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+        # remove NaN values
+        pa_df = pa_df.dropna()
         return pa_df
 
     def process_pa_df(self, pa_df):
@@ -272,7 +279,10 @@ class PlotSubject:
         # get the auc_df
         auc_df = self.read_auc_df(subject, day)
         # get the pa_df
-        pa_df = self.read_pa_df(subject, day)
+        try:
+            pa_df = self.read_pa_df(subject, day)
+        except Exception as e:
+            pa_df = pd.DataFrame(columns=['timestamp', 'pa'])
 
         # convert the timestamp to datetime from epoch milliseconds
         auc_df['epoch'] = pd.to_datetime(auc_df['epoch'], unit='ms')
@@ -321,7 +331,7 @@ class PlotSubject:
 
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, subplot_titles=("AUC", "Minutes of PA"))
+        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.08, subplot_titles=("AUC", "Minutes of PA"))
 
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
@@ -342,8 +352,8 @@ class PlotSubject:
 
         # did the same for the prompts_df but no annotation and different edge color
         for index, row in prompts_df.iterrows():
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='blue', line_width=1, line_color='purple', line_dash='dashdot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1, line_color='purple', line_dash='dot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='purple', line_width=1, line_color='purple', line_dash='dot')
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
         fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
@@ -354,7 +364,7 @@ class PlotSubject:
                 xref="paper",
                 x=0
             ),
-            height=700,
+            height=800,
             width=1200
         )
         # check if the date folder exists in the figures folder
@@ -369,4 +379,4 @@ class PlotSubject:
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
 
 # test = PlotSubject() 
-# test.plot_subject('user01', '2023-02-08')
+# test.plot_subject('user01', '2023-02-12')

@@ -42,7 +42,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 DATA_PATH = ROOT_DIR + '/data/raw/'
 
 class UnZip:
-    def unzip_raw_auc_file(self, path, password = '<zip file password>'):
+    def unzip_raw_auc_file(self, path, password = 'TIMEisthenewMICROTStudy-NUUSC'):
         '''
         unzip the raw auc file
         :param path: str

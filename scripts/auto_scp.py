@@ -8,18 +8,15 @@ class AutoSCP:
         self.ppk_password = ppk_password
         self.ppk_path = ppk_path
         self.data_path = os.path.dirname(os.path.abspath(__file__)) + '/../data/raw/'
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.ssh.connect('mhealth-sci.khoury.northeastern.edu',
+                            username=self.khoury_id,
+                            password=self.ppk_password,
+                            key_filename=self.ppk_path)
 
     def get_logs_watch(self, subject_id, date):
-        ssh = paramiko.SSHClient()
-
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        ssh.connect('mhealth-sci.khoury.northeastern.edu', 
-                    username=self.khoury_id, 
-                    password=self.ppk_password, 
-                    key_filename=self.ppk_path)
-
-        scp = SCPClient(ssh.get_transport())
+        scp = SCPClient(self.ssh.get_transport())
 
         # check if the destination folder exists
         if not os.path.exists(f"{self.data_path}{subject_id}@scijitai_com/logs-watch/"):
@@ -30,19 +27,9 @@ class AutoSCP:
                 recursive=True)
 
         scp.close()
-        ssh.close()
 
     def get_logs(self, subject_id, date):
-        ssh = paramiko.SSHClient()
-
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        ssh.connect('mhealth-sci.khoury.northeastern.edu', 
-                    username=self.khoury_id, 
-                    password=self.ppk_password, 
-                    key_filename=self.ppk_path)
-
-        scp = SCPClient(ssh.get_transport())
+        scp = SCPClient(self.ssh.get_transport())
 
         # check if the destination folder exists
         if not os.path.exists(f"{self.data_path}{subject_id}@scijitai_com/logs/"):
@@ -52,18 +39,9 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/logs", 
                 recursive=True)
         scp.close()
-        ssh.close()
+
     def get_data(self, subject_id, date):
-        ssh = paramiko.SSHClient()
-
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        ssh.connect('mhealth-sci.khoury.northeastern.edu', 
-                    username=self.khoury_id, 
-                    password=self.ppk_password, 
-                    key_filename=self.ppk_path)
-
-        scp = SCPClient(ssh.get_transport())
+        scp = SCPClient(self.ssh.get_transport())
 
         # check if the destination folder exists
         if not os.path.exists(f"{self.data_path}{subject_id}@scijitai_com/data/"):
@@ -73,18 +51,9 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/data", 
                 recursive=True)
         scp.close()
-        ssh.close()
+
     def get_data_watch(self, subject_id, date):
-        ssh = paramiko.SSHClient()
-
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        ssh.connect('mhealth-sci.khoury.northeastern.edu', 
-                    username=self.khoury_id, 
-                    password=self.ppk_password, 
-                    key_filename=self.ppk_path)
-
-        scp = SCPClient(ssh.get_transport())
+        scp = SCPClient(self.ssh.get_transport())
 
         # check if the destination folder exists
         if not os.path.exists(f"{self.data_path}{subject_id}@scijitai_com/data-watch/"):
@@ -94,4 +63,3 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/data-watch", 
                 recursive=True)
         scp.close()
-        ssh.close()

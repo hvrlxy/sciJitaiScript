@@ -149,7 +149,8 @@ class Schedule:
         except Exception as e:
             logger.error(f"extract_info_from_schedule_df(): Error getting {key_word}")
             logger.error(traceback.format_exc())
-            return "N/A"
+            # return "N/A"
+            return np.NaN
 
         return value
     
@@ -171,7 +172,7 @@ class Schedule:
         goal_settings = self.extract_info_from_schedule_df(schedule_generation_df, 'goal_settings')
         first_jitai = self.extract_info_from_schedule_df(schedule_generation_df, 'first_jitai')
         second_jitai = self.extract_info_from_schedule_df(schedule_generation_df, 'second_jitai')
-        eod_message = self.extract_info_from_schedule_df(schedule_generation_df, 'eod_message')
+        eod_prompt = str(int(wake_time) + 13 * 60 * 60 * 1000)
 
         # get goalType, jitai1, jitai2
         goalType, jitai1, jitai2 = self.process_schedule_retrieval(subject, timestamp)
@@ -185,7 +186,7 @@ class Schedule:
         # add the second_jitai to the schedule_df
         schedule_df = schedule_df.append({'date': timestamp, 'wake_time': wake_time, 'week': week, 'day': dayIndex, 'message_type': 'second_jitai', 'message_note': jitai2, 'start_prompt': second_jitai}, ignore_index=True)
         # add the eod_message to the schedule_df
-        schedule_df = schedule_df.append({'date': timestamp, 'wake_time': wake_time, 'week': week, 'day': dayIndex, 'message_type': 'eod_message', 'message_note': None, 'start_prompt': eod_message}, ignore_index=True)
+        schedule_df = schedule_df.append({'date': timestamp, 'wake_time': wake_time, 'week': week, 'day': dayIndex, 'message_type': 'eod_message', 'message_note': None, 'start_prompt': eod_prompt}, ignore_index=True)
         logger.info(f"process_schedule_generation(): Creating schedule_df for {subject} on {day} done")
 
         # add an user_id column to the beginning of the schedule_df

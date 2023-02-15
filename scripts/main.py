@@ -9,7 +9,6 @@ import os
 import logging
 import datetime
 import traceback
-import time
 
 warnings.filterwarnings("ignore")
 
@@ -101,7 +100,7 @@ for day in last_10_days:
             logger.error('Error getting data-watcher logs for day: ' + day)
             logger.error(traceback.format_exc())
         print('Finished getting data for subject: ' + subject + ' for day: ' + day)
-    time.sleep(5)
+    # time.sleep(5)
 
 # unzip all the files from the last 10 days
 unzip.unzip_all(days=nums_day)
@@ -138,4 +137,5 @@ for day in last_10_days:
         except Exception as e:
             logger.error('Error plotting battery for subject: ' + subject + ' for day: ' + day)
             # print(traceback.format_exc())
+            logger.error(traceback.format_exc())
             continue

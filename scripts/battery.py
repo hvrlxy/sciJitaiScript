@@ -180,7 +180,10 @@ class Battery:
             # list all the files in the folder
             files = os.listdir(logs_path + folder)
             # only grab the file with the name ConnectivityManager.log.csv
-            csv_files = [file for file in files if file == 'ConnectivityManager.log.csv'][0]
+            csv_files = [file for file in files if file == 'ConnectivityManager.log.csv']
+            if len(csv_files) == 0:
+                continue
+            csv_files = csv_files[0]
             # read the csv file
             df = pd.read_csv(logs_path + folder + '/' + csv_files, names=['timestamp', 'info', 'subject', 'log', 'message'])
             # append the df to the connectivity_df
@@ -283,7 +286,10 @@ class Battery:
         # loop through all the folders in the logs path
         for folder in logs_folders:
             # list all the files in the folder
-            files = os.listdir(logs_path + folder)
+            try:
+                files = os.listdir(logs_path + folder)
+            except Exception as e:
+                continue
             # only grab the file with the name SystemBroadcastReceiver.log.csv
             csv_files = [file for file in files if file == 'Watch-EMAAlwaysOnService.log.csv']
             if len(csv_files) == 0:
@@ -298,3 +304,8 @@ class Battery:
             # add the timestamp to the reboot_list
             screen_on_list.extend(df['timestamp'].tolist())
         return screen_on_list
+
+test = Battery()
+test.plotting_battery(subject='user01', date='2023-02-08')
+test.plotting_battery(subject='user02', date='2023-02-08')
+test.plotting_battery(subject='user03', date='2023-02-08')
