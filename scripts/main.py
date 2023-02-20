@@ -16,7 +16,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 1
+nums_day = 7
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d') 
@@ -49,7 +49,7 @@ yesterday = datetime.datetime.today()
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 # TODO: list of subjects
-subjects = ['user01', 'user02', 'user03']
+subjects = ['user01', 'user02', 'user03','user06']
 
 # initialize the auto scp class
 auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)

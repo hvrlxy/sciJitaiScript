@@ -92,9 +92,9 @@ class PAbouts:
                 continue
             # if the current time is 1.5 minutes in millisecond after the last_detection_run, run the detection algorithm
             if row['epoch'] - last_detection_run >= 90000:
-                # calculate the percentage of the auc_list that is above the threshold
-                percentage = len([auc for auc in auc_list if auc[1] > threshold]) / len(auc_list)
-                if percentage >= 0.75:
+                # calculate the number of data points below the threshold
+                below_threshold = len([auc for auc in auc_list if auc[1] < threshold])
+                if below_threshold <= 4:
                     if row['epoch'] - last_detected_epoch >= 180000:
                         current_PA += 3
                     else:
@@ -118,12 +118,13 @@ class PAbouts:
         final_df.insert(0, 'timestamp', pd.to_datetime(final_df['epoch'], unit='ms'))
         # convert to EDT timezone
         final_df['timestamp'] = final_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
-        return final_df
 
-test = PAbouts('user03', '2023-02-09')
-df = test.calculate_PA()
-# save the df to a csv file
-df.to_csv(os.path.dirname(os.path.abspath(__file__)) + '/../test.csv', index=False)
+        daily_PA = final_df.iloc[-1]['PA']
+        return final_df, daily_PA
+
+# test = PAbouts('user01', '2023-02-17')
+# df, daily_PA = test.calculate_PA()
+# print(daily_PA)
 
 
 

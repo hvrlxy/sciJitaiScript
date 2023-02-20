@@ -11,6 +11,7 @@ import logging
 import traceback
 import warnings
 from prompts import Prompts
+from pa_algorithm import PAbouts
 warnings.filterwarnings("ignore")
 
 # get today's date as format YYYY-MM-DD
@@ -268,7 +269,7 @@ class PlotSubject:
             logger.error(traceback.format_exc())
             return pd.DataFrame(columns=['timestamp', 'epoch', 'message_type'])
 
-    def plot_subject(self, subject, day):
+    def plot_subject(self, subject, day, show = False):
         '''
         plot the subject's data
         :param subject: str
@@ -329,9 +330,26 @@ class PlotSubject:
             logger.error(traceback.format_exc())
             schedule_df = pd.DataFrame(columns=['start_prompt_epoch', 'message_type'])
 
+        # calculate the daily_PA
+        bout = PAbouts(subject, day)
+        try:
+            offline_df , daily_PA = bout.calculate_PA()
+        except Exception as e:
+            daily_PA = 0
+            offline_df = pd.DataFrame(columns=['epoch', 'PA'])
+            logger.error(f"plot_subject(): No bouts on day {day} for {subject} - offline")
+            logger.error(traceback.format_exc())
+
+        # real time PA is the max entry in the pa_df
+        try:
+            real_time_PA = pa_df['pa'].max()
+        except Exception as e:
+            real_time_PA = 0
+            logger.error(f"plot_subject(): No bouts on day {day} for {subject} - online")
+            logger.error(traceback.format_exc())
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.08, subplot_titles=("AUC", "Minutes of PA"))
+        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, subplot_titles=("AUC", "Minutes of PA"))
 
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
@@ -341,7 +359,9 @@ class PlotSubject:
 
         # remove the row with even index in pa_df
         # pa_df = pa_df[pa_df.index % 2 == 0]
-        fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'],mode='lines', fill='tozeroy', name='PA'), row=2, col=1)
+        fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', fill='tozeroy', name='Online PA'), row=2, col=1)
+        # add the offline_df to the plot
+        fig.add_trace(go.Scatter(x=offline_df['epoch'], y=offline_df['PA'], mode='lines', name='Offline PA'), row=2, col=1)
 
         # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
         for index, row in schedule_df.iterrows():
@@ -357,6 +377,9 @@ class PlotSubject:
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
         fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
+        # add a horizontal line at y = daily_PA in the second subplot and mark it as Watch Logged PA 
+        fig.add_hline(y=5, row=2, col=1, line_width=1, line_dash='dash', line_color='#222222', annotation_text=f'Offline PA: {daily_PA} minutes', annotation_position='bottom left', annotation=dict(font_size=10))
+        fig.add_hline(y=5, row=2, col=1, line_width=1, line_dash='dash', line_color='#222222', annotation_text=f'Online PA: {real_time_PA} minutes', annotation_position='top left', annotation=dict(font_size=10))
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
@@ -378,5 +401,7 @@ class PlotSubject:
         fig.write_image(self.FIGURES_PATH + day + '/' + subject + '.png', scale = 5)
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
 
+        if show:
+            fig.show()
 # test = PlotSubject() 
-# test.plot_subject('user01', '2023-02-12')
+# test.plot_subject('user01', '2023-02-19')
