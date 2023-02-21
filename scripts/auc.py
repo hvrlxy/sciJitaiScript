@@ -284,6 +284,13 @@ class PlotSubject:
             pa_df = self.read_pa_df(subject, day)
         except Exception as e:
             pa_df = pd.DataFrame(columns=['timestamp', 'pa'])
+            # get the start timestamp of the day in pa_df
+            start_timestamp = auc_df['epoch'].min()
+            # get the end timestamp of the day in auc_df
+            end_timestamp = auc_df['epoch'].max()
+            #append 2 rows to offline_df
+            pa_df = pa_df.append({'timestamp': start_timestamp, 'pa': 0}, ignore_index=True)
+            pa_df = pa_df.append({'timestamp': end_timestamp, 'pa': 0}, ignore_index=True)
 
         # convert the timestamp to datetime from epoch milliseconds
         auc_df['epoch'] = pd.to_datetime(auc_df['epoch'], unit='ms')
@@ -337,8 +344,36 @@ class PlotSubject:
         except Exception as e:
             daily_PA = 0
             offline_df = pd.DataFrame(columns=['epoch', 'PA'])
+            # get the start timestamp of the day in pa_df
+            start_timestamp = pa_df['timestamp'].min()
+            # get the end timestamp of the day in pa_df
+            end_timestamp = pa_df['timestamp'].max()
+            #append 2 rows to offline_df
+            offline_df = offline_df.append({'epoch': start_timestamp, 'PA': 0}, ignore_index=True)
+            offline_df = offline_df.append({'epoch': end_timestamp, 'PA': 0}, ignore_index=True)
             logger.error(f"plot_subject(): No bouts on day {day} for {subject} - offline")
             logger.error(traceback.format_exc())
+        # turn the epoch to datetime in EDT timezone
+        offline_df['epoch'] = pd.to_datetime(offline_df['epoch'], unit='ms')
+        offline_df['epoch'] = offline_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+        print(offline_df)
+        # append a colume which calculate the differences between the PA in consecutive rows
+        offline_df['diff'] = offline_df['PA'].diff()
+        pa_df['diff'] = pa_df['pa'].diff()
+
+        # for rows with NAN in diff, replace it with 0
+        offline_df['diff'] = offline_df['diff'].fillna(0)
+        pa_df['diff'] = pa_df['diff'].fillna(0)
+
+        # every value > 1 is considered as a bout and value set to 1
+        offline_df['diff'] = offline_df['diff'].apply(lambda x: 1 if x > 1 else x)
+        pa_df['diff'] = pa_df['diff'].apply(lambda x: 1 if x > 1 else x)
+        pa_df['diff'] = pa_df['diff'].apply(lambda x: 0 if x < 0 else x)
+        offline_df['diff'] = offline_df['diff'].apply(lambda x: 0 if x < 0 else x)
+
+        # print count of bouts
+        offline_bouts = offline_df['diff'].sum()
+        online_bouts = pa_df['diff'].sum()
 
         # real time PA is the max entry in the pa_df
         try:
@@ -349,37 +384,28 @@ class PlotSubject:
             logger.error(traceback.format_exc())
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, subplot_titles=("AUC", "Minutes of PA"))
+        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.08, subplot_titles=("AUC", f"Offline PA: {daily_PA} minutes | Offline Bouts: {offline_bouts} bouts", f"Online PA: {real_time_PA} minutes | Online Bouts: {online_bouts} bouts"), row_heights=[0.8, 0.1, 0.1])
 
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
-        # fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', fill='tozeroy', name='AUC'), row=1, col=1)
-        # add the pa_df to the plot
-        # fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', name='PA'), row=2, col=1)
-
-        # remove the row with even index in pa_df
-        # pa_df = pa_df[pa_df.index % 2 == 0]
-        fig.add_trace(go.Scatter(x=pa_df['timestamp'], y=pa_df['pa'], mode='lines', fill='tozeroy', name='Online PA'), row=2, col=1)
-        # add the offline_df to the plot
-        fig.add_trace(go.Scatter(x=offline_df['epoch'], y=offline_df['PA'], mode='lines', name='Offline PA'), row=2, col=1)
+        # update the range of the y-axis to 8000 or 100 + max value of auc_df's AUC column
+        fig.update_yaxes(range=[0, max(8000, 100 + auc_df['AUC'].max())], row=1, col=1)
+        # add a 1 row heatmap in the second subplot with values from offline_df's diff column
+        fig.add_trace(go.Heatmap(x=offline_df['epoch'], y = ["PA"], z=[offline_df['diff']], colorscale='Picnic', showscale=False, name=f"Offline PA"), row=2, col=1)
+        # add a 1 row heatmap in the third subplot with values from pa_df's diff column
+        fig.add_trace(go.Heatmap(x=pa_df['timestamp'], y = ["pa"], z=[pa_df['diff']], colorscale='Electric', showscale=False, name=f"Online PA"), row=3, col=1)
 
         # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
         for index, row in schedule_df.iterrows():
             fig.add_vrect(x0=row['start_prompt_epoch'], x1=row['start_prompt_epoch'], row=1, col=1, line_width=1.5, annotation_text=row['message_type'], 
                 annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', line_color='green')
-            fig.add_vrect(x0=row['start_prompt_epoch'], x1=row['start_prompt_epoch'], row=2, col=1, line_width=1.5, annotation_text=row['message_type'], 
-                annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_dash='dash', line_color='green')
 
         # did the same for the prompts_df but no annotation and different edge color
         for index, row in prompts_df.iterrows():
             fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1, line_color='purple', line_dash='dot')
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=2, col=1, fillcolor='purple', line_width=1, line_color='purple', line_dash='dot')
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
         fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
-        # add a horizontal line at y = daily_PA in the second subplot and mark it as Watch Logged PA 
-        fig.add_hline(y=5, row=2, col=1, line_width=1, line_dash='dash', line_color='#222222', annotation_text=f'Offline PA: {daily_PA} minutes', annotation_position='bottom left', annotation=dict(font_size=10))
-        fig.add_hline(y=5, row=2, col=1, line_width=1, line_dash='dash', line_color='#222222', annotation_text=f'Online PA: {real_time_PA} minutes', annotation_position='top left', annotation=dict(font_size=10))
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
@@ -390,6 +416,7 @@ class PlotSubject:
             height=800,
             width=1200
         )
+
         # check if the date folder exists in the figures folder
         if not os.path.exists(self.FIGURES_PATH + day):
             # create the date folder
@@ -403,5 +430,6 @@ class PlotSubject:
 
         if show:
             fig.show()
-# test = PlotSubject() 
-# test.plot_subject('user01', '2023-02-19')
+
+test = PlotSubject() 
+test.plot_subject('user03', '2023-02-20', show=True)

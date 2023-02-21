@@ -83,37 +83,39 @@ class PAbouts:
         threshold = 2000
         last_detected_epoch = 0
         last_detection_run = auc_df.iloc[0]['epoch']
-
+        bout3 = 0
+        bout1 = 0
         # loop through the rows of the df
         for index, row in auc_df.iterrows():
             # if auc_list is empty, append the auc value to the list
             if not auc_list:
                 auc_list.append((row['epoch'], row['AUCsum']))
                 continue
+            # check if last detection_run and current epoch is in the same hour (EDT timezone)
+            if datetime.datetime.fromtimestamp(last_detection_run / 1000).hour != datetime.datetime.fromtimestamp(row['epoch'] / 1000).hour:
+                # if not, reset the last_detection_run to the current epoch
+                last_detection_run = row['epoch']
             # if the current time is 1.5 minutes in millisecond after the last_detection_run, run the detection algorithm
             if row['epoch'] - last_detection_run >= 90000:
                 # calculate the number of data points below the threshold
                 below_threshold = len([auc for auc in auc_list if auc[1] < threshold])
-                if below_threshold <= 4:
+                if below_threshold <= 4 and len(auc_list) >= 18:
                     if row['epoch'] - last_detected_epoch >= 180000:
+                        bout3 += 1
                         current_PA += 3
                     else:
+                        bout1 += 1
                         current_PA += 1.5
 
                     last_detected_epoch = row['epoch']
-
-                    # print(auc_list, current_PA)
                 # set the last_detection_run to the current epoch
                 last_detection_run = row['epoch']
-
+                # append the row to the final df
+                final_df = final_df.append([{'epoch': row['epoch'], 'AUCsum': row['AUCsum'], 'PA': current_PA}])
             # append the auc value to the auc_list
             auc_list.append((row['epoch'], row['AUCsum']))
             # remove all the auc values that are older than 3 minutes
             auc_list = [auc for auc in auc_list if row['epoch'] - auc[0] <= 180000]
-                
-            # append the row to the final df
-            final_df = final_df.append([{'epoch': row['epoch'], 'AUCsum': row['AUCsum'], 'PA': current_PA}])
-
         # add a timestamp column to the beginning of the df
         final_df.insert(0, 'timestamp', pd.to_datetime(final_df['epoch'], unit='ms'))
         # convert to EDT timezone
@@ -121,10 +123,6 @@ class PAbouts:
 
         daily_PA = final_df.iloc[-1]['PA']
         return final_df, daily_PA
-
-# test = PAbouts('user01', '2023-02-17')
-# df, daily_PA = test.calculate_PA()
-# print(daily_PA)
 
 
 

@@ -16,7 +16,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 7
+nums_day = 2
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d') 
