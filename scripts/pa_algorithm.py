@@ -99,7 +99,7 @@ class PAbouts:
             if row['epoch'] - last_detection_run >= 90000:
                 # calculate the number of data points below the threshold
                 below_threshold = len([auc for auc in auc_list if auc[1] < threshold])
-                if below_threshold <= 4 and len(auc_list) >= 18:
+                if below_threshold < 4 and len(auc_list) >= 18:
                     if row['epoch'] - last_detected_epoch >= 180000:
                         bout3 += 1
                         current_PA += 3

@@ -52,17 +52,17 @@ class Schedule:
             datetime.datetime.strptime(day, '%Y-%m-%d')
         except ValueError:
             logger.error("generate_day_schedule(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("generate_day_schedule(): Incorrect data format, should be YYYY-MM-DD")
+            print("generate_day_schedule(): Incorrect data format, should be YYYY-MM-DD")
 
         # check if the subject is in the data/raw folder
         if subject_full not in os.listdir(self.DATA_PATH):
             logger.error("generate_day_schedule(): Subject not found in data/raw folder")
-            raise ValueError("generate_day_schedule(): Subject not found in data/raw folder")
+            print("generate_day_schedule(): Subject not found in data/raw folder")
 
         # check if the day is in the subject folder
         if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
             logger.error("generate_day_schedule(): Day not found in subject logs-watch folder")
-            raise ValueError("generate_day_schedule(): Day not found in subject logs-watch folder")
+            print("generate_day_schedule(): Day not found in subject logs-watch folder")
 
         # unzipping the logs-watch folder
         try:
@@ -70,8 +70,8 @@ class Schedule:
         except Exception as e:
             logger.error("generate_day_schedule(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
+            # print(traceback.format_exc())
+            print(f'Error unzipping {subject} on {day}')
         logger.info(f"generate_day_schedule(): Unzipping logs-watch folder for {subject} on {day} done")
 
         # search for the Common folder inside the logs-watch/day folder
@@ -79,14 +79,14 @@ class Schedule:
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("generate_day_schedule(): Common folder not found in subject logs-watch folder")
-            raise ValueError("generate_day_schedule(): Common folder not found in subject logs-watch folder")
+            print("generate_day_schedule(): Common folder not found in subject logs-watch folder")
 
         # search for the Watch-SensorManagerService.log.csv file inside the Common folder
         watch_sensor_manager_service_path = common_folder_path + 'Watch-SensorManagerService.log.csv'
         # check if the Watch-SensorManagerService.log.csv file exists
         if not os.path.exists(watch_sensor_manager_service_path):
             logger.error("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
-            raise ValueError("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
+            print("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
         
         # read the Watch-SensorManagerService.log.csv file
         logger.info(f"generate_day_schedule(): Reading Watch-SensorManagerService.log.csv file for {subject} on {day}")
@@ -116,7 +116,7 @@ class Schedule:
         #check if the sensor manager service file exists
         if not os.path.exists(sensor_manager_service_path):
             logger.error("generate_schedule_retrieval_df(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
-            raise ValueError("generate_schedule_retrieval_df(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
+            print("generate_schedule_retrieval_df(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
         
         # read the Watch-SensorManagerService.log.csv file
         logger.info(f"generate_schedule_retrieval_df(): Reading Watch-SensorManagerService.log.csv file for {subject} on {date}")
