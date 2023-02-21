@@ -116,10 +116,6 @@ class PAbouts:
             auc_list.append((row['epoch'], row['AUCsum']))
             # remove all the auc values that are older than 3 minutes
             auc_list = [auc for auc in auc_list if row['epoch'] - auc[0] <= 180000]
-        # add a timestamp column to the beginning of the df
-        final_df.insert(0, 'timestamp', pd.to_datetime(final_df['epoch'], unit='ms'))
-        # convert to EDT timezone
-        final_df['timestamp'] = final_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
 
         daily_PA = final_df.iloc[-1]['PA']
         return final_df, daily_PA

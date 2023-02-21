@@ -87,6 +87,7 @@ class Schedule:
         if not os.path.exists(watch_sensor_manager_service_path):
             logger.error("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
             print("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
+            return None
         
         # read the Watch-SensorManagerService.log.csv file
         logger.info(f"generate_day_schedule(): Reading Watch-SensorManagerService.log.csv file for {subject} on {day}")
@@ -156,10 +157,14 @@ class Schedule:
     
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
-        # print(schedule_generation_df)
-
-        # get the first item in the timestamp column
-        timestamp = schedule_generation_df.iloc[0]['timestamp']
+        # print(schedule_generation_df) 
+        try:
+            # get the first item in the timestamp column
+            timestamp = schedule_generation_df.iloc[0]['timestamp']
+        except Exception as e:
+            logger.error(f"process_schedule_generation(): Error getting timestamp")
+            logger.error(traceback.format_exc())
+            return pd.DataFrame(columns=['date', 'wake_time', 'week', 'day', 'message_type', 'message_note', 'start_prompt'])
         # convert the timestamp to datetime (string to datetime)
         timestamp = datetime.datetime.strptime(timestamp, '%a %b %d %H:%M:%S %Z %Y')
         # convert timestamp to string format YYYY-MM-DD

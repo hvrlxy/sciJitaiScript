@@ -127,7 +127,7 @@ class PlotSubject:
         except Exception as e:
             logger.error("read_auc_df(): Error unzipping logs-watch folder")
             logger.error(traceback.format_exc())
-            print(traceback.format_exc())
+            # print(traceback.format_exc())
             raise ValueError(f'Error unzipping {subject} on {day}')
         logger.info(f"read_auc_df(): Unzipping logs-watch folder for {subject} on {day} done")
 
@@ -269,6 +269,23 @@ class PlotSubject:
             logger.error(traceback.format_exc())
             return pd.DataFrame(columns=['timestamp', 'epoch', 'message_type'])
 
+    def get_auc_summary(self, auc_df):
+        # get the minimum timestamp
+        start_timestamp = auc_df['epoch'].min()
+        # get the maximum timestamp
+        end_timestamp = auc_df['epoch'].max()
+
+        # calculate the number of minutes in between
+        minutes = (end_timestamp - start_timestamp) / 60000
+        # total of samples is minutes * 6 (10 seconds)
+        total_samples = minutes * 6
+        #get the number of samples in the auc_df
+        samples = auc_df.shape[0]
+        #calculate the percentage of samples
+        percentage = samples / total_samples * 100
+        # return 3 values
+        return total_samples, samples, percentage
+
     def plot_subject(self, subject, day, show = False):
         '''
         plot the subject's data
@@ -292,6 +309,8 @@ class PlotSubject:
             pa_df = pa_df.append({'timestamp': start_timestamp, 'pa': 0}, ignore_index=True)
             pa_df = pa_df.append({'timestamp': end_timestamp, 'pa': 0}, ignore_index=True)
 
+        # get the total samples, samples, and percentage
+        total_samples, samples, percentage = self.get_auc_summary(auc_df)
         # convert the timestamp to datetime from epoch milliseconds
         auc_df['epoch'] = pd.to_datetime(auc_df['epoch'], unit='ms')
         # convert to EST timezone
@@ -356,7 +375,7 @@ class PlotSubject:
         # turn the epoch to datetime in EDT timezone
         offline_df['epoch'] = pd.to_datetime(offline_df['epoch'], unit='ms')
         offline_df['epoch'] = offline_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
-        print(offline_df)
+
         # append a colume which calculate the differences between the PA in consecutive rows
         offline_df['diff'] = offline_df['PA'].diff()
         pa_df['diff'] = pa_df['pa'].diff()
@@ -389,7 +408,7 @@ class PlotSubject:
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
         # update the range of the y-axis to 8000 or 100 + max value of auc_df's AUC column
-        fig.update_yaxes(range=[0, max(8000, 100 + auc_df['AUC'].max())], row=1, col=1)
+        fig.update_yaxes(range=[0, max(9000, 100 + auc_df['AUC'].max())], row=1, col=1)
         # add a 1 row heatmap in the second subplot with values from offline_df's diff column
         fig.add_trace(go.Heatmap(x=offline_df['epoch'], y = ["PA"], z=[offline_df['diff']], colorscale='Picnic', showscale=False, name=f"Offline PA"), row=2, col=1)
         # add a 1 row heatmap in the third subplot with values from pa_df's diff column
@@ -402,10 +421,17 @@ class PlotSubject:
 
         # did the same for the prompts_df but no annotation and different edge color
         for index, row in prompts_df.iterrows():
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1, line_color='purple', line_dash='dot')
+            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, line_color='purple', line_dash='dot')
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
         fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
+
+        ### Add annotation to display number of data points
+        start_timestamp = pa_df['timestamp'].min()
+        fig.add_annotation(text=str(round(samples, 2)) + " Data Points Available Out of " + str(round(total_samples,2)),
+                        x=start_timestamp, y=max(9000, 100 + auc_df['AUC'].max()), showarrow=False, bgcolor='lightblue', opacity = 0.95)
+        fig.add_annotation(text=str(round(percentage)) + " Percent of Total Data Points",
+                        x=start_timestamp, y=max(9000, 100 + auc_df['AUC'].max())-500, showarrow=False, bgcolor='lightblue', opacity = 0.95)
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
@@ -413,7 +439,7 @@ class PlotSubject:
                 xref="paper",
                 x=0
             ),
-            height=800,
+            height=700,
             width=1200
         )
 
@@ -430,6 +456,3 @@ class PlotSubject:
 
         if show:
             fig.show()
-
-test = PlotSubject() 
-test.plot_subject('user03', '2023-02-20', show=True)

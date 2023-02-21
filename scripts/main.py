@@ -16,7 +16,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 2
+nums_day = 1
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d') 
@@ -69,41 +69,41 @@ plot_subject = PlotSubject()
 # initialize the battery class
 battery = Battery()
 
-# get the data from the server for the last 10 days
-for day in last_10_days:
-    for subject in subjects:
-        logger.info('Getting data for subject: ' + subject + ' for day: ' + day)
-        # get logs-watch 
-        try:
-            auto_scp.get_logs_watch(subject, day)
-        except Exception as e:
-            logger.error('Error getting logs-watcher logs for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        logger.info('Finished getting data for subject: ' + subject + ' for day: ' + day)
-        try:
-            auto_scp.get_data(subject, day)
-        except Exception as e:
-            logger.error('Error getting data for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        try:
-            auto_scp.get_logs(subject, day)
-        except Exception as e:
-            logger.error('Error getting logs for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        # get data-watcher logs
-        try:
-            auto_scp.get_data_watch(subject, day)
-        except Exception as e:
-            logger.error('Error getting data-watcher logs for day: ' + day)
-            logger.error(traceback.format_exc())
-        print('Finished getting data for subject: ' + subject + ' for day: ' + day)
-    # time.sleep(5)
+# # get the data from the server for the last 10 days
+# for day in last_10_days:
+#     for subject in subjects:
+#         logger.info('Getting data for subject: ' + subject + ' for day: ' + day)
+#         # get logs-watch 
+#         try:
+#             auto_scp.get_logs_watch(subject, day)
+#         except Exception as e:
+#             logger.error('Error getting logs-watcher logs for day: ' + day)
+#             logger.error(traceback.format_exc())
+#             print('Error getting logs-watcher logs for day: ' + day)
+#         logger.info('Finished getting data for subject: ' + subject + ' for day: ' + day)
+#         try:
+#             auto_scp.get_data(subject, day)
+#         except Exception as e:
+#             logger.error('Error getting data for day: ' + day)
+#             logger.error(traceback.format_exc())
+#             print('Error getting logs-watcher logs for day: ' + day)
+#         try:
+#             auto_scp.get_logs(subject, day)
+#         except Exception as e:
+#             logger.error('Error getting logs for day: ' + day)
+#             logger.error(traceback.format_exc())
+#             print('Error getting logs-watcher logs for day: ' + day)
+#         # get data-watcher logs
+#         try:
+#             auto_scp.get_data_watch(subject, day)
+#         except Exception as e:
+#             logger.error('Error getting data-watcher logs for day: ' + day)
+#             logger.error(traceback.format_exc())
+#         print('Finished getting data for subject: ' + subject + ' for day: ' + day)
+#     # time.sleep(5)
 
-# unzip all the files from the last 10 days
-unzip.unzip_all(days=nums_day)
+# # unzip all the files from the last 10 days
+# unzip.unzip_all(days=nums_day)
 
 # get the schedule for the last 10 days
 for day in last_10_days:
