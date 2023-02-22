@@ -242,7 +242,7 @@ class Battery:
                 current_date = start_time.date()
                 end_time = datetime.datetime.combine(current_date + datetime.timedelta(days=1), datetime.time(0, 0, 0))
             # append the start_time, end_time, and connectivity to the processed_df
-            # processed_df = processed_df.append({'start_time': start_time, 'end_time': end_time, 'connectivity': connectivity}, ignore_index=True)
+            processed_df = processed_df.append({'start_time': start_time, 'end_time': end_time, 'connectivity': connectivity}, ignore_index=True)
         return processed_df
 
     def get_reboot_time(self, subject, date):
@@ -306,4 +306,7 @@ class Battery:
         return screen_on_list
 
 test = Battery()
-test.plotting_battery(subject='user01', date='2023-02-20')
+test.plotting_battery(subject='user03', date='2023-02-20')
+test.plotting_battery(subject='user03', date='2023-02-21')
+test.plotting_battery(subject='user06', date='2023-02-20')
+test.plotting_battery(subject='user06', date='2023-02-21')
