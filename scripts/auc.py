@@ -456,3 +456,6 @@ class PlotSubject:
 
         if show:
             fig.show()
+
+test = PlotSubject()
+test.plot_subject('user03', '2023-02-23')

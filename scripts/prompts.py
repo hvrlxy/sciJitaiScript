@@ -226,7 +226,7 @@ class Prompts:
             return None
 
         # read the Watch-SecondMessageJITAI.log.csv file
-        jitai2_df = pd.read_csv(jitai2_file_path, names=['timestamp', 'type', "message"], header=None)
+        jitai2_df = pd.read_csv(jitai2_file_path, names=['timestamp', 'type', "message", 'unknown', 'unknown2'], header=None)
         # check if the jitai2_df is empty
         if jitai2_df.empty:
             logger.error("read_jitai2_df(): SecondMessageJITAI file is empty")
@@ -339,5 +339,5 @@ class Prompts:
 
 # test = Prompts()
 # print(
-#     test.read_all_message_df('user01', '2023-01-27')
+#     test.read_all_message_df('user01', '2023-02-22')
 # )

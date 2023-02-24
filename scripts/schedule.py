@@ -240,7 +240,6 @@ class Schedule:
                 logger.info(f"process_all_user(): Generating schedule_df for {user} on {day} done")
             except Exception as e:
                 logger.error(f"process_all_user(): Error while generating schedule_df for {user} on {day}: {e}")
-                print(traceback.format_exc())
                 logger.error(traceback.format_exc())
                 continue
 

@@ -222,7 +222,6 @@ class UnZip:
                 try:
                     self.unzip_logs_folder(subject, date)
                 except Exception as e:
-                    print(traceback.format_exc())
                     print(f'Error unzipping {subject} on {date}')
                     pass
 

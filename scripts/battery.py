@@ -305,8 +305,8 @@ class Battery:
             screen_on_list.extend(df['timestamp'].tolist())
         return screen_on_list
 
-test = Battery()
-test.plotting_battery(subject='user03', date='2023-02-20')
-test.plotting_battery(subject='user03', date='2023-02-21')
-test.plotting_battery(subject='user06', date='2023-02-20')
-test.plotting_battery(subject='user06', date='2023-02-21')
+# test = Battery()
+# test.plotting_battery(subject='user03', date='2023-02-20')
+# test.plotting_battery(subject='user03', date='2023-02-21')
+# test.plotting_battery(subject='user06', date='2023-02-20')
+# test.plotting_battery(subject='user06', date='2023-02-21')
