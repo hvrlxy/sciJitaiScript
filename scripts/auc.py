@@ -421,7 +421,12 @@ class PlotSubject:
 
         # did the same for the prompts_df but no annotation and different edge color
         for index, row in prompts_df.iterrows():
-            fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, line_color='purple', line_dash='dot')
+            # if message_type is wi
+            if row['message_type'] == 'wi':
+                fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, annotation_text=row['message_type'], 
+                annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_color='purple', line_dash='dot')
+            else:
+                fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, line_color='purple', line_dash='dot')
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
         fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
@@ -457,5 +462,5 @@ class PlotSubject:
         if show:
             fig.show()
 
-test = PlotSubject()
-test.plot_subject('user03', '2023-02-23')
+# test = PlotSubject()
+# test.plot_subject('user01', '2023-02-27')

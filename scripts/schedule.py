@@ -251,3 +251,4 @@ class Schedule:
         logger.info(f"process_all_user(): Saving schedule_df to a csv file done")
 
         return schedule_df
+    

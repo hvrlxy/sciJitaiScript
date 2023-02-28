@@ -164,7 +164,7 @@ class Prompts:
             return None
 
         # read the Watch-FirstMessageJITAI.log.csv file
-        jitai1_df = pd.read_csv(jitai1_file_path, names=['timestamp', 'type', "message"], header=None)
+        jitai1_df = pd.read_csv(jitai1_file_path, names=['timestamp', 'type', "message", 'unknown', 'unknown2'], header=None)
         # check if the jitai1_df is empty
         if jitai1_df.empty:
             logger.error("read_jitai1_df(): FirstMessageJITAI file is empty")
@@ -288,7 +288,7 @@ class Prompts:
             return None
 
         # read the Watch-EODEMA.log.csv file
-        eod_df = pd.read_csv(eod_file_path, names=['timestamp', 'type', "message"], header=None)
+        eod_df = pd.read_csv(eod_file_path, names=['timestamp', 'type', "message", 'unknown', 'unknown2'], header=None)
         # check if the eod_df is empty
         if eod_df.empty:
             logger.error("read_eod_df(): EODEMA file is empty")
@@ -304,14 +304,77 @@ class Prompts:
         # create a message_type column and set it to eod
         eod_df['message_type'] = 'eod'
         return eod_df
+    
+    def read_WI_message(self, subject, day):
+        subject_full = subject + '@scijitai_com'
+        # check if the day format is YYYY-MM-DD by converting it to datetime
+        try:
+            datetime.datetime.strptime(day, '%Y-%m-%d')
+        except ValueError:
+            logger.error("read_WI_message(): Incorrect data format, should be YYYY-MM-DD")
+            raise ValueError("read_WI_message(): Incorrect data format, should be YYYY-MM-DD")
+
+        # check if the subject is in the data/raw folder
+        if subject_full not in os.listdir(self.DATA_PATH):
+            logger.error("read_WI_message(): Subject not found in data/raw folder")
+            raise ValueError("read_WI_message(): Subject not found in data/raw folder")
+
+        # check if the day is in the subject folder
+        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
+            logger.error("read_WI_message(): Day not found in subject logs-watch folder")
+            raise ValueError("read_WI_message(): Day not found in subject logs-watch folder")
+
+        # unzipping the logs-watch folder
+        try:
+            self.unzip.unzip_logs_watch_folder(subject, day)
+        except Exception as e:
+            logger.error("read_WI_message(): Error unzipping logs-watch folder")
+            logger.error(traceback.format_exc())
+            print(traceback.format_exc())
+            raise ValueError(f'Error unzipping {subject} on {day}')
+        logger.info(f"read_WI_message(): Unzipping logs-watch folder for {subject} on {day} done")
+
+        # search for the Common folder inside the logs-watch/day folder
+        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        # check if the Common folder exists
+        if not os.path.exists(common_folder_path):
+            logger.error("read_WI_message(): Common folder not found in subject logs-watch folder")
+            raise ValueError("read_WI_message(): Common folder not found in subject logs-watch folder")
+
+        # search for the Watch-EODEMA.log.csv file inside the Common folder
+        wi_file_path = common_folder_path + 'Watch-WI-Notification.log.csv'
+        # check if the Watch-wiEMA.log.csv file exists
+        if not os.path.exists(wi_file_path):
+            logger.error("read_WI_message(): WI file not found in Common folder")
+            return None
+        
+        # read the Watch-wiEMA.log.csv file
+        wi_df = pd.read_csv(wi_file_path, names=['timestamp', 'type', "message"], header=None)
+        # print(wi_df)
+        # check if the wi_df is empty
+        if wi_df.empty:
+            logger.error("read_wi_df(): wiEMA file is empty")
+            return None
+
+        # filter out the rows that has substring prompt_appear:wi~ in the message column
+        wi_df = wi_df[wi_df['message'].str.contains('prompted~')]
+        # create a epoch column with the value of spltting the message column by ~ and taking the second element
+        wi_df['epoch'] = wi_df['message'].str.split('~').str[1]
+        # delete the message column
+        del wi_df['message']
+        del wi_df['type']
+        # create a message_type column and set it to wi
+        wi_df['message_type'] = 'wi'
+        return wi_df
 
     def read_all_message_df(self, subject, day):
         goal_settings_df = self.read_goal_settings_df(subject, day)
         jitai1_df = self.read_jitai1_df(subject, day)
         jitai2_df = self.read_jitai2_df(subject, day)
         eod_df = self.read_eod_df(subject, day)
+        wi_df = self.read_WI_message(subject, day)
 
-        all_message_df = pd.concat([goal_settings_df, jitai1_df, jitai2_df, eod_df])
+        all_message_df = pd.concat([goal_settings_df, jitai1_df, jitai2_df, eod_df, wi_df])
         all_message_df = all_message_df.sort_values(by=['timestamp'])
 
         # check if the day folder exists in the shcedule folder
@@ -339,5 +402,5 @@ class Prompts:
 
 # test = Prompts()
 # print(
-#     test.read_all_message_df('user01', '2023-02-22')
+#     test.read_all_message_df('user01', '2023-02-27')
 # )
