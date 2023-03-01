@@ -224,15 +224,19 @@ class PlotSubject:
         # pa_df = self.process_pa_df(pa_df)
         # sort the pa_df by timestamp
         pa_df = pa_df.sort_values(by=['epoch'])
+        # add 3 minutes to the epoch time
+        # pa_df['epoch'] = pa_df['epoch'].apply(lambda x: x + 180000)
         # turn the epoch milliseconds to datetime
         pa_df['timestamp'] = pd.to_datetime(pa_df['epoch'], unit='ms')
+        # get the epoch list 
+        epoch_list = pa_df['epoch'].tolist()
         # remove epoch column
         pa_df = pa_df.drop(columns=['epoch'])
         # convert to EDT timezone
         pa_df['timestamp'] = pa_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
         # remove NaN values
         pa_df = pa_df.dropna()
-        return pa_df
+        return pa_df, epoch_list
 
     def process_pa_df(self, pa_df):
         '''
@@ -298,7 +302,7 @@ class PlotSubject:
         auc_df = self.read_auc_df(subject, day)
         # get the pa_df
         try:
-            pa_df = self.read_pa_df(subject, day)
+            pa_df, epoch_list = self.read_pa_df(subject, day)
         except Exception as e:
             pa_df = pd.DataFrame(columns=['timestamp', 'pa'])
             # get the start timestamp of the day in pa_df
@@ -308,6 +312,7 @@ class PlotSubject:
             #append 2 rows to offline_df
             pa_df = pa_df.append({'timestamp': start_timestamp, 'pa': 0}, ignore_index=True)
             pa_df = pa_df.append({'timestamp': end_timestamp, 'pa': 0}, ignore_index=True)
+            epoch_list = []
 
         # get the total samples, samples, and percentage
         total_samples, samples, percentage = self.get_auc_summary(auc_df)
@@ -359,7 +364,7 @@ class PlotSubject:
         # calculate the daily_PA
         bout = PAbouts(subject, day)
         try:
-            offline_df , daily_PA = bout.calculate_PA()
+            offline_df , daily_PA = bout.calculate_PA(epoch_list)
         except Exception as e:
             daily_PA = 0
             offline_df = pd.DataFrame(columns=['epoch', 'PA'])
@@ -374,7 +379,11 @@ class PlotSubject:
             logger.error(traceback.format_exc())
         # turn the epoch to datetime in EDT timezone
         offline_df['epoch'] = pd.to_datetime(offline_df['epoch'], unit='ms')
-        offline_df['epoch'] = offline_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+        print(offline_df['epoch'])
+        try:
+            offline_df['epoch'] = offline_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+        except Exception as e:
+            logger.error(f"plot_subject(): No offline bouts on day {day} for {subject}")
 
         # append a colume which calculate the differences between the PA in consecutive rows
         offline_df['diff'] = offline_df['PA'].diff()
@@ -393,6 +402,10 @@ class PlotSubject:
         # print count of bouts
         offline_bouts = offline_df['diff'].sum()
         online_bouts = pa_df['diff'].sum()
+
+        # move all timestamp from offline and online 3 minutes ahead
+        offline_df['epoch'] = offline_df['epoch'] + pd.Timedelta(minutes=3)
+        pa_df['timestamp'] = pa_df['timestamp'] + pd.Timedelta(minutes=3)
 
         # real time PA is the max entry in the pa_df
         try:
@@ -423,7 +436,7 @@ class PlotSubject:
         for index, row in prompts_df.iterrows():
             # if message_type is wi
             if row['message_type'] == 'wi':
-                fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, annotation_text=row['message_type'], 
+                fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, annotation_text="WI notification", 
                 annotation_position="top right", annotation=dict(font_size=10, textangle=-90), line_color='purple', line_dash='dot')
             else:
                 fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, line_color='purple', line_dash='dot')
@@ -462,5 +475,5 @@ class PlotSubject:
         if show:
             fig.show()
 
-# test = PlotSubject()
-# test.plot_subject('user01', '2023-02-27')
+test = PlotSubject()
+test.plot_subject('user04', '2023-02-28')

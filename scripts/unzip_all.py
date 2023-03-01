@@ -210,8 +210,7 @@ class UnZip:
             logger.error(traceback.format_exc())
             logger.error(f'Error reading file: {path_logs} - Check if the file exists')
 
-    def unzip_all(self, days = 3):
-        subject_list = ['user03', 'user02', 'user01']
+    def unzip_all(self, days = 3, subject_list = []):
 
         # get a list of all the dates from 10 days ago to today
         date_list = [datetime.datetime.now() - datetime.timedelta(days=x) for x in range(0, days)]
@@ -224,6 +223,3 @@ class UnZip:
                 except Exception as e:
                     print(f'Error unzipping {subject} on {date}')
                     pass
-
-
-# UnZip().unzip_all()
