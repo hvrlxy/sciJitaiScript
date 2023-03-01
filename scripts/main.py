@@ -102,8 +102,8 @@ for day in last_10_days:
         print('Finished getting data for subject: ' + subject + ' for day: ' + day)
     # time.sleep(5)
 
-# unzip all the files from the last 10 days
-unzip.unzip_all(days=nums_day)
+# unzip all the files
+unzip.unzip_all(days=nums_day, subject_list=subjects)
 
 # get the schedule for the last 10 days
 for day in last_10_days:
