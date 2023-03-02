@@ -84,7 +84,10 @@ class PAbouts:
             # count the number of rows that has AUCsum > threshold
             num_samples_above_threshold = epoch_df[epoch_df['AUCsum'] > threshold].shape[0]
             # check if the percentage of samples above threshold is greater than 75%
-            is_pa = num_samples_above_threshold / total_samples >= 0.75
+            if total_samples == 0:
+                is_pa = False
+            else:
+                is_pa = num_samples_above_threshold / total_samples >= 0.75
             # if is_beginning is True, then add 3 minutes to the daily_PA
             if is_beginning and is_pa:
                 daily_PA += 3
