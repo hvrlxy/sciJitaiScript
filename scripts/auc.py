@@ -379,7 +379,7 @@ class PlotSubject:
             logger.error(traceback.format_exc())
         # turn the epoch to datetime in EDT timezone
         offline_df['epoch'] = pd.to_datetime(offline_df['epoch'], unit='ms')
-        print(offline_df['epoch'])
+        # print(offline_df['epoch'])
         try:
             offline_df['epoch'] = offline_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
         except Exception as e:
@@ -416,16 +416,20 @@ class PlotSubject:
             logger.error(traceback.format_exc())
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.08, subplot_titles=("AUC", f"Offline PA: {daily_PA} minutes | Offline Bouts: {offline_bouts} bouts", f"Online PA: {real_time_PA} minutes | Online Bouts: {online_bouts} bouts"), row_heights=[0.8, 0.1, 0.1])
+        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.08, 
+                                     subplot_titles=("AUC", f"Offline PA: {daily_PA} minutes | Offline Bouts: {offline_bouts} bouts", 
+                                    f"Online PA: {real_time_PA} minutes | Online Bouts: {online_bouts} bouts"), row_heights=[0.8, 0.1, 0.1])
 
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
         # update the range of the y-axis to 8000 or 100 + max value of auc_df's AUC column
         fig.update_yaxes(range=[0, max(9000, 100 + auc_df['AUC'].max())], row=1, col=1)
         # add a 1 row heatmap in the second subplot with values from offline_df's diff column
-        fig.add_trace(go.Heatmap(x=offline_df['epoch'], y = ["PA"], z=[offline_df['diff']], colorscale='Picnic', showscale=False, name=f"Offline PA"), row=2, col=1)
+        fig.add_trace(go.Heatmap(x=offline_df['epoch'], y = ["PA"], z=[offline_df['diff']], colorscale='Picnic', 
+                                 showscale=False, name=f"Offline PA"), row=2, col=1)
         # add a 1 row heatmap in the third subplot with values from pa_df's diff column
-        fig.add_trace(go.Heatmap(x=pa_df['timestamp'], y = ["pa"], z=[pa_df['diff']], colorscale='Electric', showscale=False, name=f"Online PA"), row=3, col=1)
+        fig.add_trace(go.Heatmap(x=pa_df['timestamp'], y = ["pa"], z=[pa_df['diff']], colorscale='Electric', 
+                                 showscale=False, name=f"Online PA"), row=3, col=1)
 
         # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
         for index, row in schedule_df.iterrows():
@@ -449,7 +453,7 @@ class PlotSubject:
         fig.add_annotation(text=str(round(samples, 2)) + " Data Points Available Out of " + str(round(total_samples,2)),
                         x=start_timestamp, y=max(9000, 100 + auc_df['AUC'].max()), showarrow=False, bgcolor='lightblue', opacity = 0.95)
         fig.add_annotation(text=str(round(percentage)) + " Percent of Total Data Points",
-                        x=start_timestamp, y=max(9000, 100 + auc_df['AUC'].max())-500, showarrow=False, bgcolor='lightblue', opacity = 0.95)
+                        x=start_timestamp, y=max(9000, 100 + auc_df['AUC'].max())*0.92, showarrow=False, bgcolor='lightblue', opacity = 0.95)
         # create a subtitle for the entire plot
         fig.update_layout(
             title=go.layout.Title(
@@ -475,5 +479,5 @@ class PlotSubject:
         if show:
             fig.show()
 
-test = PlotSubject()
-test.plot_subject('user04', '2023-02-28')
+# test = PlotSubject()
+# test.plot_subject('user04', '2023-02-28')
