@@ -365,6 +365,9 @@ class Prompts:
         del wi_df['type']
         # create a message_type column and set it to wi
         wi_df['message_type'] = 'wi'
+
+        #only take the first row
+        wi_df = wi_df.tail(1)
         return wi_df
 
     def read_all_message_df(self, subject, day):

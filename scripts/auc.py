@@ -276,7 +276,7 @@ class PlotSubject:
     def get_auc_summary(self, auc_df):
         # get the minimum timestamp
         start_timestamp = auc_df['epoch'].min()
-        # get the maximum timestamp
+        # get the final timestamp (index - 1)
         end_timestamp = auc_df['epoch'].max()
 
         # calculate the number of minutes in between
@@ -409,7 +409,7 @@ class PlotSubject:
 
         # real time PA is the max entry in the pa_df
         try:
-            real_time_PA = pa_df['pa'].max()
+            real_time_PA = pa_df['pa'].iloc[-1]
         except Exception as e:
             real_time_PA = 0
             logger.error(f"plot_subject(): No bouts on day {day} for {subject} - online")
@@ -480,4 +480,4 @@ class PlotSubject:
             fig.show()
 
 # test = PlotSubject()
-# test.plot_subject('user04', '2023-02-28')
+# test.plot_subject('user01', '2023-03-03')
