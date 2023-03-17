@@ -3,7 +3,7 @@ from unzip_all import UnZip
 from prompts import Prompts
 from auc import PlotSubject
 from auto_scp import AutoSCP
-from battery import Battery
+from battery_connectivity import BatteryConnectivity
 import warnings
 import os
 import logging
@@ -13,9 +13,9 @@ import traceback
 warnings.filterwarnings("ignore")
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
-khoury_id = 'rachelcarey'
-ppk_password = 'scijitai'
-ppk_path = ROOT_DIR + '/.ssh/serverkey.ppk'
+khoury_id = 'hle5'
+ppk_password = 'lemyha00'
+ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
 nums_day = 2
 
 # get today's date as format YYYY-MM-DD
@@ -49,8 +49,7 @@ yesterday = datetime.datetime.today()
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 # TODO: list of subjects
-subjects = ['user01', 'user03', 'user04', 'user05', 'user06', 'user07','user09']
-
+subjects = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user08', 'user09']
 # initialize the auto scp class
 auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
 
@@ -67,7 +66,7 @@ prompts = Prompts()
 plot_subject = PlotSubject()
 
 # initialize the battery class
-battery = Battery()
+battery = BatteryConnectivity()
 
 # get the data from the server for the last 10 days
 for day in last_10_days:

@@ -12,6 +12,7 @@ import traceback
 import warnings
 from prompts import Prompts
 from pa_algorithm import PAbouts
+from battery import Battery
 warnings.filterwarnings("ignore")
 
 # get today's date as format YYYY-MM-DD
@@ -55,6 +56,9 @@ class PlotSubject:
 
         # initiahe the schedule class
         self.schedule = Schedule()
+
+        # initialize the battery class
+        self.battery = Battery()
 
     def impute_auc_df(self, df):
         '''
@@ -406,7 +410,7 @@ class PlotSubject:
         # move all timestamp from offline and online 3 minutes ahead
         offline_df['epoch'] = offline_df['epoch'] + pd.Timedelta(minutes=3)
         pa_df['timestamp'] = pa_df['timestamp'] + pd.Timedelta(minutes=3)
-
+        
         # real time PA is the max entry in the pa_df
         try:
             real_time_PA = pa_df['pa'].iloc[-1]
@@ -416,9 +420,9 @@ class PlotSubject:
             logger.error(traceback.format_exc())
         # create a plotly plot with 4 subplots
         fig = go.Figure()
-        fig = subplots.make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.08, 
+        fig = subplots.make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.08, 
                                      subplot_titles=("AUC", f"Offline PA: {daily_PA} minutes | Offline Bouts: {offline_bouts} bouts", 
-                                    f"Online PA: {real_time_PA} minutes | Online Bouts: {online_bouts} bouts"), row_heights=[0.8, 0.1, 0.1])
+                                    f"Online PA: {real_time_PA} minutes | Online Bouts: {online_bouts} bouts", "Battery Level: 100-Green, 50-Yellow, 0-Red"), row_heights=[0.7, 0.05, 0.05, 0.1])
 
         # add the auc_df to the plot, color the area under the curve
         fig.add_trace(go.Scatter(x=auc_df['epoch'], y=auc_df['AUC'], mode='lines', name='AUC'), row=1, col=1)
@@ -431,6 +435,12 @@ class PlotSubject:
         fig.add_trace(go.Heatmap(x=pa_df['timestamp'], y = ["pa"], z=[pa_df['diff']], colorscale='Electric', 
                                  showscale=False, name=f"Online PA"), row=3, col=1)
 
+        # read the battery_df
+        battery_df = self.battery.get_battery_data(subject, day)
+
+        # add a heatmap in the fourth subplot with values from battery_df's battery_level column
+        fig.add_trace(go.Heatmap(x=battery_df['timestamp'], y = ["battery"], z=[battery_df['battery_level']],
+                                    showscale=False, name=f"Battery", colorscale=[(0, "red"), (0.2, "yellow"), (0.7, "green"), (1, '#014705')]), row=4, col=1)
         # for each entry in schedule_df, add a vertical line with x-axis as start_prompt_epoch and y-axis as message_type
         for index, row in schedule_df.iterrows():
             fig.add_vrect(x0=row['start_prompt_epoch'], x1=row['start_prompt_epoch'], row=1, col=1, line_width=1.5, annotation_text=row['message_type'], 
@@ -480,4 +490,4 @@ class PlotSubject:
             fig.show()
 
 # test = PlotSubject()
-# test.plot_subject('user01', '2023-03-03')
+# test.plot_subject('user01', '2023-03-03', show=True)

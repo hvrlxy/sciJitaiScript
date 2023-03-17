@@ -99,12 +99,12 @@ class Schedule:
         logger.info(f"generate_day_schedule(): Filtering out the rows start with schedule_generation in the message column for {subject} on {day}")
         schedule_generation_df = watch_sensor_manager_service_df[watch_sensor_manager_service_df['message'].str.startswith('schedule_generation')]
         logger.info(f"generate_day_schedule(): Filtering out the rows start with schedule_generation in the message column for {subject} on {day} done")
-
         # reindex the schedule_generation_df
         schedule_generation_df = schedule_generation_df.reset_index(drop=True)
 
         # get the index of the row with prefix schedule_generation:week
         schedule_generation_index = schedule_generation_df[schedule_generation_df['message'].str.contains('schedule_generation:week')].index[0]
+        
         #remove all rows before the schedule_generation:week row
         schedule_generation_df = schedule_generation_df[schedule_generation_index:]
 
@@ -157,6 +157,8 @@ class Schedule:
     
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
+        #replace any AST in timestamp with EST
+        schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('AST', 'EST')
         # print(schedule_generation_df) 
         try:
             # get the first item in the timestamp column
@@ -203,7 +205,6 @@ class Schedule:
         schedule_df['start_prompt_epoch'] = schedule_df['start_prompt']
         schedule_df['start_prompt'] = schedule_df['start_prompt'].apply(lambda x: datetime.datetime.fromtimestamp(int(x)/1000).strftime('%H:%M'))
         logger.info(f"process_schedule_generation(): Converting the wake_time and the start_prompt to datetime string with format HH:MM from epoch time for {subject} on {day} done")
-
         return schedule_df
 
     def process_schedule_retrieval(self, subject: str, day: str):
@@ -252,3 +253,5 @@ class Schedule:
 
         return schedule_df
     
+# schedule_obj = Schedule()
+# schedule_obj.process_all_user("2023-03-13", ["user09"])
