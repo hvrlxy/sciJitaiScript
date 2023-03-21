@@ -180,4 +180,4 @@ class JSONReader:
 DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../../data/schedules/'
 OUTPUT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../../data/clean/'
 jsonReader = JSONReader(DATA_PATH, OUTPUT_PATH)
-jsonReader.read_into_one_xlsx(['user01', 'user03', 'user04', 'user06', 'user09'])
+jsonReader.read_into_one_xlsx(['user01', 'user03', 'user04', 'user05', 'user06', 'user09'])

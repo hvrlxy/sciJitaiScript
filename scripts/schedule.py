@@ -81,19 +81,19 @@ class Schedule:
             logger.error("generate_day_schedule(): Common folder not found in subject logs-watch folder")
             print("generate_day_schedule(): Common folder not found in subject logs-watch folder")
 
-        # search for the Watch-SensorManagerService.log.csv file inside the Common folder
-        watch_sensor_manager_service_path = common_folder_path + 'Watch-SensorManagerService.log.csv'
-        # check if the Watch-SensorManagerService.log.csv file exists
+        # search for the Watch-EMAManager.log.csv file inside the Common folder
+        watch_sensor_manager_service_path = common_folder_path + 'Watch-EMAManager.log.csv'
+        # check if the Watch-EMAManager.log.csv file exists
         if not os.path.exists(watch_sensor_manager_service_path):
-            logger.error("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
-            print("generate_day_schedule(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
+            logger.error("generate_day_schedule(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
+            print("generate_day_schedule(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
             return None
         
-        # read the Watch-SensorManagerService.log.csv file
-        logger.info(f"generate_day_schedule(): Reading Watch-SensorManagerService.log.csv file for {subject} on {day}")
-        # read the Watch-SensorManagerService.log.csv file with columns: timestamp, type and message
+        # read the Watch-EMAManager.log.csv file
+        logger.info(f"generate_day_schedule(): Reading Watch-EMAManager.log.csv file for {subject} on {day}")
+        # read the Watch-EMAManager.log.csv file with columns: timestamp, type and message
         watch_sensor_manager_service_df = pd.read_csv(watch_sensor_manager_service_path, names=['timestamp', 'type', 'message', "unknown", "unknown2", "unknown3"])
-        logger.info(f"generate_day_schedule(): Reading Watch-SensorManagerService.log.csv file for {subject} on {day} done")
+        logger.info(f"generate_day_schedule(): Reading Watch-EMAManager.log.csv file for {subject} on {day} done")
 
         # filter out the rows start with schedule_generation in the message column
         logger.info(f"generate_day_schedule(): Filtering out the rows start with schedule_generation in the message column for {subject} on {day}")
@@ -112,18 +112,18 @@ class Schedule:
 
     def generate_schedule_retrieval_df(self, subject:str, date:str):
         # get the path to the sensor manager service file
-        sensor_manager_service_path = self.DATA_PATH + subject + '@scijitai_com/logs-watch/' + date + '/Common/Watch-SensorManagerService.log.csv'
+        sensor_manager_service_path = self.DATA_PATH + subject + '@scijitai_com/logs-watch/' + date + '/Common/Watch-EMAManager.log.csv'
 
         #check if the sensor manager service file exists
         if not os.path.exists(sensor_manager_service_path):
-            logger.error("generate_schedule_retrieval_df(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
-            print("generate_schedule_retrieval_df(): Watch-SensorManagerService.log.csv file not found in subject logs-watch folder")
+            logger.error("generate_schedule_retrieval_df(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
+            print("generate_schedule_retrieval_df(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
         
-        # read the Watch-SensorManagerService.log.csv file
-        logger.info(f"generate_schedule_retrieval_df(): Reading Watch-SensorManagerService.log.csv file for {subject} on {date}")
-        # read the Watch-SensorManagerService.log.csv file with columns: timestamp, type and message
+        # read the Watch-EMAManager.log.csv file
+        logger.info(f"generate_schedule_retrieval_df(): Reading Watch-EMAManager.log.csv file for {subject} on {date}")
+        # read the Watch-EMAManager.log.csv file with columns: timestamp, type and message
         sensor_manager_service_df = pd.read_csv(sensor_manager_service_path, names=['timestamp', 'type', 'message', "unknown", "unknown2", "unknown3"])
-        logger.info(f"generate_schedule_retrieval_df(): Reading Watch-SensorManagerService.log.csv file for {subject} on {date} done")
+        logger.info(f"generate_schedule_retrieval_df(): Reading Watch-EMAManager.log.csv file for {subject} on {date} done")
 
         # get the index of the row with prefix schedule_generation:week
         schedule_generation_index = sensor_manager_service_df[sensor_manager_service_df['message'].str.contains('schedule_generation:week')].index[0]
