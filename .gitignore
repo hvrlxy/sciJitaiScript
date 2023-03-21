@@ -134,3 +134,4 @@ reports/*
 logs/*
 figures/*
 ssh/*
+scripts/main.py
