@@ -63,3 +63,11 @@ class AutoSCP:
                 f"{self.data_path}{subject_id}@scijitai_com/data-watch", 
                 recursive=True)
         scp.close()
+
+    def upload_reports(self):
+        report_path = os.path.dirname(os.path.abspath(__file__)) + '/../reports/'
+        scp = SCPClient(self.ssh.get_transport())
+        scp.put(f"{report_path}", 
+                f"/opt/reports/", 
+                recursive=True)
+        scp.close()

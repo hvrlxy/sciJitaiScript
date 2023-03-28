@@ -100,7 +100,8 @@ class Prompts:
         if goal_settings_df.empty:
             logger.error("read_goal_settings_df(): GoalSettingsEMA file is empty")
             return None
-
+        # if there is a message contains the string prompt_answered:wakeEMA then set answered to true
+        answered = goal_settings_df['message'].str.contains('prompt_answered:goal_settings').any()
         # filter out the rows that has substring prompt_appear:goal_settings~ in the message column
         goal_settings_df = goal_settings_df[goal_settings_df['message'].str.contains('prompt_appear:goal_settings~')]
         # create a epoch column with the value of spltting the message column by ~ and taking the second element
@@ -111,7 +112,9 @@ class Prompts:
         # create a message_type column and set it to goal_settings
         goal_settings_df['message_type'] = 'goal_settings'
 
-
+        # create a status column, set all value to false except for the last row to answered
+        goal_settings_df['status'] = False
+        goal_settings_df['status'].iloc[-1] = answered
         return goal_settings_df
 
     def read_jitai1_df(self, subject, day):
@@ -170,6 +173,8 @@ class Prompts:
             logger.error("read_jitai1_df(): FirstMessageJITAI file is empty")
             return None
 
+        # if there is a message contains the string prompt_answered:wakeEMA then set answered to true
+        answered = jitai1_df['message'].str.contains('fortuneCookie').any()
         # filter out the rows that has substring prompt_appear:jitai1~ in the message column
         jitai1_df = jitai1_df[jitai1_df['message'].str.contains('prompt_appear:jitai1~')]
         # create a epoch column with the value of spltting the message column by ~ and taking the second element
@@ -180,6 +185,9 @@ class Prompts:
         # create a message_type column and set it to jitai1
         jitai1_df['message_type'] = 'jitai1'
 
+        # create a status column, set all value to false except for the last row to answered
+        jitai1_df['status'] = False
+        jitai1_df['status'].iloc[-1] = answered
         return jitai1_df
 
     def read_jitai2_df(self, subject, day):
@@ -231,7 +239,9 @@ class Prompts:
         if jitai2_df.empty:
             logger.error("read_jitai2_df(): SecondMessageJITAI file is empty")
             return None
-
+        
+        # if there is a message contains the string prompt_answered:wakeEMA then set answered to true
+        answered = jitai2_df['message'].str.contains('fortuneCookie').any()
         # filter out the rows that has substring prompt_appear:jitai2~ in the message column
         jitai2_df = jitai2_df[jitai2_df['message'].str.contains('prompt_appear:jitai2~')]
         # create a epoch column with the value of spltting the message column by ~ and taking the second element
@@ -241,7 +251,10 @@ class Prompts:
         del jitai2_df['type']
         # create a message_type column and set it to jitai2
         jitai2_df['message_type'] = 'jitai2'
-
+        
+        # create a status column, set all value to false except for the last row to answered
+        jitai2_df['status'] = False
+        jitai2_df['status'].iloc[-1] = answered
         return jitai2_df
 
     def read_eod_df(self, subject, day):
@@ -294,6 +307,8 @@ class Prompts:
             logger.error("read_eod_df(): EODEMA file is empty")
             return None
 
+        # if there is a message contains the string prompt_answered:wakeEMA then set answered to true
+        answered = eod_df['message'].str.contains('prompt_answered:wakeEMA').any()
         # filter out the rows that has substring prompt_appear:eod~ in the message column
         eod_df = eod_df[eod_df['message'].str.contains('prompt_appear:eod~')]
         # create a epoch column with the value of spltting the message column by ~ and taking the second element
@@ -303,6 +318,10 @@ class Prompts:
         del eod_df['type']
         # create a message_type column and set it to eod
         eod_df['message_type'] = 'eod'
+
+        # create a status column, set all value to false except for the last row to answered
+        eod_df['status'] = False
+        eod_df['status'].iloc[-1] = answered
         return eod_df
     
     def read_WI_message(self, subject, day):
@@ -379,6 +398,8 @@ class Prompts:
 
         all_message_df = pd.concat([goal_settings_df, jitai1_df, jitai2_df, eod_df, wi_df])
         all_message_df = all_message_df.sort_values(by=['timestamp'])
+        #remove all columns with names starting with 'unknown'
+        all_message_df = all_message_df.loc[:, ~all_message_df.columns.str.startswith('unknown')]
 
         # check if the day folder exists in the shcedule folder
         if day not in os.listdir(self.SCHEDULE_PATH):
