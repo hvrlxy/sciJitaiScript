@@ -68,7 +68,7 @@ class Prompts:
         # check if the day is in the subject folder
         if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
             logger.error("read_goal_settings_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_goal_settings_df(): Day not found in subject logs-watch folder")
+            raise ValueError(f"read_goal_settings_df(): {day} not found in subject logs-watch folder")
 
         # unzipping the logs-watch folder
         try:

@@ -157,10 +157,10 @@ class Schedule:
     
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
-        #replace any AST in timestamp with EST
-        schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('AST', 'EST')
         # print(schedule_generation_df) 
         try:
+            #replace any AST in timestamp with EST
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('AST', 'EST')
             # get the first item in the timestamp column
             timestamp = schedule_generation_df.iloc[0]['timestamp']
         except Exception as e:
