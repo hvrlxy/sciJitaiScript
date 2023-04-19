@@ -4,11 +4,13 @@ from prompts import Prompts
 from auc import PlotSubject
 from auto_scp import AutoSCP
 from battery_connectivity import BatteryConnectivity
+from proximal import Proximal
 import warnings
 import os
 import logging
 import datetime
 import traceback
+from compliance import Compliance
 
 warnings.filterwarnings("ignore")
 
@@ -16,10 +18,10 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 2
+nums_day = 4
 
 # get today's date as format YYYY-MM-DD
-today = datetime.datetime.today().strftime('%Y-%m-%d') 
+today = datetime.datetime.today().strftime('%Y-%m-%d')
 
 logs_path = os.path.dirname(os.path.abspath(__file__)) + '/..' + '/logs/' + today
 
@@ -49,7 +51,7 @@ yesterday = datetime.datetime.today()
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 # TODO: list of subjects
-subjects = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user08', 'user09']
+subjects = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user10', 'user09', 'user08', 'use003', 'use004']
 # initialize the auto scp class
 auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
 
@@ -67,6 +69,12 @@ plot_subject = PlotSubject()
 
 # initialize the battery class
 battery = BatteryConnectivity()
+
+# initialize the compliance class
+compliance = Compliance()
+
+# initiliaze the proximal class
+proximal = Proximal()
 
 # get the data from the server for the last 10 days
 for day in last_10_days:
@@ -129,12 +137,22 @@ for day in last_10_days:
             logger.error('Error plotting subject: ' + subject + ' for day: ' + day)
             continue
 
+# generate compliance report for the last 10 days
 for day in last_10_days:
     for subject in subjects:
         try:
-            battery.plotting_battery(subject, day)
+            compliance.save_compliance_report(subject, day)
         except Exception as e:
-            logger.error('Error plotting battery for subject: ' + subject + ' for day: ' + day)
-            # print(traceback.format_exc())
-            logger.error(traceback.format_exc())
+            logger.error('Error generating compliance report for subject: ' + subject + ' for day: ' + day)
             continue
+
+# generate proximal report for today
+for subject in subjects:
+    try:
+        proximal.get_weekly_proximal_data(subject, today)
+    except Exception as e:
+        logger.error('Error generating proximal report for subject: ' + subject + ' for day: ' + today)
+        continue
+
+# upload the reports to the server
+auto_scp.upload_reports()

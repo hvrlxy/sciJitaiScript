@@ -490,4 +490,4 @@ class PlotSubject:
             fig.show()
 
 # test = PlotSubject()
-# test.plot_subject('user01', '2023-03-03', show=True)
+# test.plot_subject('user01', '2023-04-16', show=True)

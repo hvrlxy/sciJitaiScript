@@ -190,7 +190,7 @@ class BatteryConnectivity:
             connectivity_df = connectivity_df.append(df, ignore_index=True)
             
         # convert the timestamp to datetime
-        connectivity_df['timestamp'] = pd.to_datetime(connectivity_df['timestamp'], format='%Y-%m-%d %H:%M:%S.%f EST')
+        connectivity_df['timestamp'] = connectivity_df['timestamp'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f %Z'))
         # trim the whitespace in the message column
         connectivity_df['message'] = connectivity_df['message'].str.strip()
         # split the message column by - and get the last element
@@ -266,7 +266,7 @@ class BatteryConnectivity:
             # read the csv file
             df = pd.read_csv(logs_path + folder + '/' + csv_files[0], names=['timestamp', 'info', 'subject', 'log', 'message'])
             # convert the timestamp to datetime
-            df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H:%M:%S.%f EST')
+            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f %Z'))
             # filter out the rows with message contains the string REBOOT
             df = df[df['message'].str.contains('BOOT_COMPLETED')]
             # add the timestamp to the reboot_list
@@ -297,7 +297,7 @@ class BatteryConnectivity:
             # read the csv file
             df = pd.read_csv(logs_path + folder + '/' + csv_files[0], names=['timestamp', 'info', 'message'])
             # convert the timestamp to datetime
-            df['timestamp'] = pd.to_datetime(df['timestamp'], format='%a %b %d %H:%M:%S EST %Y')
+            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.datetime.strptime(x, "%a %b %d %H:%M:%S %Z %Y"))
             # print(df)
             # filter out the rows with message contains the string REBOOT
             df = df[df['message'].str.contains('SCREEN_ON')]
@@ -305,8 +305,6 @@ class BatteryConnectivity:
             screen_on_list.extend(df['timestamp'].tolist())
         return screen_on_list
 
-# test = Battery()
-# test.plotting_battery(subject='user03', date='2023-02-20')
-# test.plotting_battery(subject='user03', date='2023-02-21')
-# test.plotting_battery(subject='user06', date='2023-02-20')
-# test.plotting_battery(subject='user06', date='2023-02-21')
+test = BatteryConnectivity()
+test.plotting_battery(subject='user06', date='2023-04-16')
+test.plotting_battery(subject='user06', date='2023-04-15')

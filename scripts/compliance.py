@@ -132,6 +132,8 @@ class Compliance:
         try:
             # read the battery log file
             battery_df = pd.read_csv(battery_log_file, names=['datetime', 'info', 'battery_level', 'charging'])
+            # replace AST with EDT in datetime
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: x.replace('AST', 'EDT'))
             #convert datetime from format %a %b %d %H:%M:%S %Z %Y to epoch milliseconds
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%a %b %d %H:%M:%S %Z %Y').timestamp() * 1000)
             # get the row with the closest datetime to the scheduled_prompt_epoch

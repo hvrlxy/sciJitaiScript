@@ -45,6 +45,8 @@ class Proximal:
         # if it is N/A, check if "prompt" column is not N/A, if it is not, return the value
         elif row['prompt_epoch'] != 'N/A':
             return row['prompt_epoch']
+        elif row['scheduled_prompt_epoch'] != 'N/A':
+            return row['scheduled_prompt_epoch']
         else:
             return 0
 
@@ -58,8 +60,6 @@ class Proximal:
         '''
         # filter the compliance dataframe by message_type and only get the first_jitai and second_jitai
         jitai_df = compliance_df[compliance_df['message_type'].isin(['first_jitai', 'second_jitai'])]
-        # filter the jitai_df by the status and only get ANS
-        jitai_df = jitai_df[jitai_df['status'] == 'ANS']
         if len(jitai_df[jitai_df['message_type'] == 'first_jitai']) == 0:
             first_jitai = self.get_answered_time(None)
         else:
@@ -81,10 +81,6 @@ class Proximal:
             return None, None
         # turn the epoch into datetime and get the hour in HH format
         hour = datetime.datetime.fromtimestamp(epoch/1000).strftime('%H')
-        # check if the hour is smaller than 10
-        if int(hour) < 10:
-            # if it is, add a 0 in front of it
-            hour = '0' + hour
         # list all the folders in date folder
         folders = os.listdir(self.DATA_PATH + f'{userID}@scijitai_com/logs-watch/{date}')
         # filter out the folders that start with hour
@@ -92,6 +88,7 @@ class Proximal:
         # remove the one ends with .zip
         folders = list(filter(lambda x: x.endswith('.zip') == False, folders))
         if len(folders) == 0:
+            print(f'No folder found for {userID} on {date} at {hour}00')
             return None, None
         # get the folder name
         folder = folders[0]
@@ -108,7 +105,6 @@ class Proximal:
             pa_value = pa_df['value'].iloc[0]
             return pa_value, pa_df['epoch'].iloc[0]
         except:
-            print(traceback.format_exc())
             return None, None
         
 
@@ -136,12 +132,19 @@ class Proximal:
         last_date = datetime.datetime.strptime(last_date, '%Y-%m-%d')
         # initialize a dataframe
         result_df = pd.DataFrame(columns=['date', 
-                                          'jitai1_timestamp', 
-                                          'jitai1_pa', 
-                                            'jitai1_pa_2h',
-                                          'jitai2_timestamp', 
-                                          'jitai2_pa',
-                                            'jitai2_pa_2h'])
+                                          'goal_type',
+                                          'jit1_timestamp', 
+                                          'jit1_epoch',
+                                          'jit1_type',
+                                          'jit1_status',
+                                          'jit1_pa', 
+                                            'jit1_pa_2h',
+                                          'jit2_timestamp', 
+                                            'jit2_epoch',
+                                            'jit2_type',
+                                            'jit2_status',
+                                          'jit2_pa',
+                                            'jit2_pa_2h'])
         # loop from 6 days ago to 0 days ago
         for i in range(7, 0, -1):
             # get the date in string format
@@ -149,26 +152,42 @@ class Proximal:
             try:
                 compliance_df = self.compliance.save_compliance_report(userID, date)
                 # get the proximal data
-                first_jitai_value, first_jitai_timestamp, second_jitai_value, second_jitai_timestamp, first_jitai_value_2h, second_jitai_value_2h = self.get_proximal(userID, date, compliance_df)
+                first_jitai_value, first_jitai_epoch, second_jitai_value, second_jitai_epoch, first_jitai_value_2h, second_jitai_value_2h = self.get_proximal(userID, date, compliance_df)
+                first_jitai_timestamp = datetime.datetime.fromtimestamp(first_jitai_epoch/1000).strftime('%H:%M:%S')
+                second_jitai_timestamp = datetime.datetime.fromtimestamp(second_jitai_epoch/1000).strftime('%H:%M:%S')
             except Exception as e:
                 # set all value to None if there is an error
                 first_jitai_value, first_jitai_timestamp, second_jitai_value, second_jitai_timestamp, first_jitai_value_2h, second_jitai_value_2h = "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA"
-            # if first_jitai_timestamp is None, replace it with compliance_df['message_type'] == 'first_jitai']['status']
-            if first_jitai_timestamp == "NO_DATA":
-                first_jitai_timestamp = compliance_df[compliance_df['message_type'] == 'first_jitai']['status'].tolist()[0]
-            # if second_jitai_timestamp is None, replace it with compliance_df['second_message']['status']
-            if second_jitai_timestamp == "NO_DATA":
-                second_jitai_timestamp = compliance_df[compliance_df['message_type'] == 'second_jitai']['status'].tolist()[0]
+                first_jitai_epoch, second_jitai_epoch = "NO_DATA", "NO_DATA"
+            
+            try:
+                if compliance_df is not None:
+                    jitai1_status = compliance_df[compliance_df['message_type'] == 'first_jitai']['status'].tolist()[0]
+                    jitai2_status = compliance_df[compliance_df['message_type'] == 'second_jitai']['status'].tolist()[0]
+                    goal_type = compliance_df[compliance_df['message_type'] == 'goal_settings']['message_note'].tolist()[0]
+                    jit1_type = compliance_df[compliance_df['message_type'] == 'first_jitai']['message_note'].tolist()[0]
+                    jit2_type = compliance_df[compliance_df['message_type'] == 'second_jitai']['message_note'].tolist()[0]
+                else:
+                    jitai1_status, jitai2_status, goal_type, jit1_type, jit2_type = "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA"
+            except:
+                jitai1_status, jitai2_status, goal_type, jit1_type, jit2_type = "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA"
             # append the data to the dataframe
             result_df = result_df.append({'date': date, 
-                                          'jitai1_timestamp': first_jitai_timestamp, 
-                                          'jitai1_pa': first_jitai_value, 
-                                          'jitai2_timestamp': second_jitai_timestamp, 
-                                          'jitai2_pa': second_jitai_value,
-                                          'jitai1_pa_2h': first_jitai_value_2h,
-                                          'jitai2_pa_2h': second_jitai_value_2h}, 
+                                            'goal_type': goal_type,
+                                          'jit1_timestamp': first_jitai_timestamp, 
+                                            'jit1_epoch': first_jitai_epoch,
+                                            'jit1_type': jit1_type,
+                                            'jit1_status': jitai1_status,
+                                          'jit1_pa': first_jitai_value, 
+                                          'jit2_timestamp': second_jitai_timestamp, 
+                                            'jit2_epoch': second_jitai_epoch,
+                                            'jit2_type': jit2_type,
+                                            'jit2_status': jitai2_status,
+                                          'jit2_pa': second_jitai_value,
+                                          'jit1_pa_2h': first_jitai_value_2h,
+                                          'jit2_pa_2h': second_jitai_value_2h}, 
                                           ignore_index=True)
-        
+            compliance_df = None
         
         # check if the proximal folder is create in the report folder
         if not os.path.exists(self.ROOT_DIR + f'/reports/proximal/{userID}/{date}'):
@@ -178,6 +197,6 @@ class Proximal:
         result_df.to_csv(self.ROOT_DIR + f'/reports/proximal/{userID}/{date}/proximal.csv', index=False)
         return result_df
     
-object = Proximal()
-df = object.get_weekly_proximal_data('user06', '2023-04-12')
-print(df)
+# object = Proximal()
+# df = object.get_weekly_proximal_data('user07', '2023-04-13')
+# print(df)
