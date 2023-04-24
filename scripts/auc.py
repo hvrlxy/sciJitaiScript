@@ -294,7 +294,7 @@ class PlotSubject:
         # return 3 values
         return total_samples, samples, percentage
 
-    def plot_subject(self, subject, day, show = False):
+    def plot_subject(self, subject, day, threshold, show = False):
         '''
         plot the subject's data
         :param subject: str
@@ -368,7 +368,7 @@ class PlotSubject:
         # calculate the daily_PA
         bout = PAbouts(subject, day)
         try:
-            offline_df , daily_PA = bout.calculate_PA(epoch_list)
+            offline_df , daily_PA = bout.calculate_PA(epoch_list, threshold)
         except Exception as e:
             daily_PA = 0
             offline_df = pd.DataFrame(columns=['epoch', 'PA'])
@@ -456,7 +456,7 @@ class PlotSubject:
                 fig.add_vrect(x0=row['epoch'], x1=row['epoch'], row=1, col=1, fillcolor='purple', line_width=1.5, line_color='purple', line_dash='dot')
 
         # add a horizontal line at y=2000 and mark it as AUC threshold
-        fig.add_hline(y=2000, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
+        fig.add_hline(y=threshold, row=1, col=1, line_width=1, line_dash='dash', line_color='red', annotation_text='AUC threshold', annotation_position='bottom left', annotation=dict(font_size=10))
 
         ### Add annotation to display number of data points
         start_timestamp = pa_df['timestamp'].min()

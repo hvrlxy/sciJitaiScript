@@ -18,7 +18,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 4
+nums_day = 2
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -52,6 +52,21 @@ last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_da
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 # TODO: list of subjects
 subjects = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user10', 'user09', 'user08', 'use003', 'use004']
+
+subject_dict = {
+    "user01": 2000,
+    "user02": 2000,
+    "user03": 2000,
+    "user04": 2000,
+    "user05": 2000,
+    "user06": 2500,
+    "user07": 2000,
+    "user08": 2000,
+    "user09": 2000,
+    "user10": 2000,
+    "use003": 2000,
+    "use004": 2000
+}
 # initialize the auto scp class
 auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
 
@@ -132,7 +147,7 @@ for day in last_10_days:
 for day in last_10_days:
     for subject in subjects:
         try:
-            plot_subject.plot_subject(subject, day)
+            plot_subject.plot_subject(subject, day, subject_dict[subject])
         except Exception as e:
             logger.error('Error plotting subject: ' + subject + ' for day: ' + day)
             continue

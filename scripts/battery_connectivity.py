@@ -306,5 +306,6 @@ class BatteryConnectivity:
         return screen_on_list
 
 test = BatteryConnectivity()
-test.plotting_battery(subject='user06', date='2023-04-16')
-test.plotting_battery(subject='user06', date='2023-04-15')
+test.plotting_battery(subject='use004', date='2023-04-23')
+# test.plotting_battery(subject='user06', date='2023-04-22')
+# test.plotting_battery(subject='user06', date='2023-04-21')
