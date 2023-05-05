@@ -25,6 +25,8 @@ first_item = df['timestamp'][0]
 print(datetime.datetime.strptime(first_item, "%a %b %d %H:%M:%S %Z %Y"))
 # convert the timestamp column to datetime, with format %a %b %d %H:%M:%S %Z %Y
 df['timestamp'] = df['timestamp'].apply(lambda x: datetime.datetime.strptime(x, "%a %b %d %H:%M:%S %Z %Y"))
+
+df['timestamp'] = pd.to_datetime(df['timestamp'], format="%a %b %d %H:%M:%S %Z %Y")
 # only keep the timestmp between 7:30pm April 15 and 4:30 am April 16
 df = df[(df['timestamp'] >= '2023-04-15 19:30:00')  & (df['timestamp'] <= '2023-04-16 04:30:00')]
 df = df.reset_index(drop=True)
@@ -47,13 +49,13 @@ fig.update_layout(height=500, width=1000)
 
 # add annotations on the top, outside the plot to show the time when the watch-phone is connected and the phone is connected to wifi
 fig.add_annotation(x='2023-04-15 22:30:00', y=1.1, xref="x", yref="paper", text="Watch-Phone Connected", showarrow=False, font=dict(size=10))
-fig.add_annotation(x='2023-04-15 22:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Connected", showarrow=False, font=dict(size=10))
+fig.add_annotation(x='2023-04-15 22:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Disconnected", showarrow=False, font=dict(size=10))
 
-fig.add_annotation(x='2023-04-15 19:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Connected", showarrow=False, font=dict(size=10))
+fig.add_annotation(x='2023-04-15 19:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Disconnected", showarrow=False, font=dict(size=10))
 fig.add_annotation(x='2023-04-15 19:30:00', y=1.1, xref="x", yref="paper", text="Watch-Phone Disconnected", showarrow=False, font=dict(size=10))
 
-fig.add_annotation(x='2023-04-16 01:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Disconnected", showarrow=False, font=dict(size=10))
-fig.add_annotation(x='2023-04-16 01:30:00', y=1.1, xref="x", yref="paper", text="Watch-Phone Disconnected", showarrow=False, font=dict(size=10))
+fig.add_annotation(x='2023-04-16 01:30:00', y=1.05, xref="x", yref="paper", text="Phone Wifi Connected", showarrow=False, font=dict(size=10))
+fig.add_annotation(x='2023-04-16 01:30:00', y=1.1, xref="x", yref="paper", text="Watch-Phone Connected", showarrow=False, font=dict(size=10))
 
 # add a dotted line at 22:30pm April 15 to show the time when the watch-phone is connected
 fig.add_shape(type="line", xref="x", yref="y", x0='2023-04-15 22:30:00', y0=60, x1='2023-04-15 22:30:00', y1=100, line=dict(color="black", width=2, dash="dot"))

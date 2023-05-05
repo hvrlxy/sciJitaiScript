@@ -106,7 +106,23 @@ class Proximal:
             return pa_value, pa_df['epoch'].iloc[0]
         except:
             return None, None
-        
+    
+    def get_total_pa_at_date(self, userID, date):
+        # get the battery log file in the Common folder
+        pa_path = self.DATA_PATH + f'{userID}@scijitai_com/logs-watch/{date}/Common/Watch-Watch-PABoutInfo.log.csv'
+        # if there is no such file, return 0
+        if os.path.isfile(pa_path) == False:
+            return 0
+        # read the battery log file
+        try:
+            pa_df = pd.read_csv(pa_path, names=["timestamp", "info", "value"])
+            #get the "value" column at the last row
+            pa_value = pa_df['value'].iloc[-1]
+            # parse by : and get the second value
+            pa_value = pa_value.split(': ')[1]
+            return pa_value
+        except:
+            return None
 
     def get_proximal(self, userID, date, compliance_df):
         first_jitai, second_jitai = self.get_jitai_info(userID, date, compliance_df)
@@ -144,7 +160,8 @@ class Proximal:
                                             'jit2_type',
                                             'jit2_status',
                                           'jit2_pa',
-                                            'jit2_pa_2h'])
+                                            'jit2_pa_2h',
+                                            "total_pa"])
         # loop from 6 days ago to 0 days ago
         for i in range(7, 0, -1):
             # get the date in string format
@@ -185,7 +202,8 @@ class Proximal:
                                             'jit2_status': jitai2_status,
                                           'jit2_pa': second_jitai_value,
                                           'jit1_pa_2h': first_jitai_value_2h,
-                                          'jit2_pa_2h': second_jitai_value_2h}, 
+                                          'jit2_pa_2h': second_jitai_value_2h,
+                                          "total_pa": self.get_total_pa_at_date(userID, date)}, 
                                           ignore_index=True)
             compliance_df = None
         
