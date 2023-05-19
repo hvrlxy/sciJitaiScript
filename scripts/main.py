@@ -3,7 +3,6 @@ from unzip_all import UnZip
 from prompts import Prompts
 from auc import PlotSubject
 from auto_scp import AutoSCP
-from battery_connectivity import BatteryConnectivity
 from proximal import Proximal
 import warnings
 import os
