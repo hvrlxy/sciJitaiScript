@@ -17,7 +17,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 khoury_id = 'hle5'
 ppk_password = 'lemyha00'
 ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 2
+nums_day = 12
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -50,21 +50,15 @@ yesterday = datetime.datetime.today()
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 # TODO: list of subjects
-subjects = ['user01', 'user02', 'user03', 'user04', 'user05', 'user06', 'user07', 'user10', 'user09', 'user08', 'use003', 'use004']
+subjects = ['user06', "scijitai_01", "scijitai_02", "scijitai_03", "scijitai_04", "scijitai_05"]
 
 subject_dict = {
-    "user01": 2000,
-    "user02": 2000,
-    "user03": 2000,
-    "user04": 2000,
-    "user05": 2000,
     "user06": 2500,
-    "user07": 2000,
-    "user08": 2000,
-    "user09": 2000,
-    "user10": 2000,
-    "use003": 2000,
-    "use004": 2000
+    "scijitai_01": 2000,
+    "scijitai_02": 2000,
+    "scijitai_03": 2000,
+    "scijitai_04": 2000,
+    "scijitai_05": 2000
 }
 # initialize the auto scp class
 auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
@@ -80,9 +74,6 @@ prompts = Prompts()
 
 # initialize the plot subject class
 plot_subject = PlotSubject()
-
-# initialize the battery class
-battery = BatteryConnectivity()
 
 # initialize the compliance class
 compliance = Compliance()
