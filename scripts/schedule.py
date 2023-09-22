@@ -37,7 +37,7 @@ class Schedule:
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
         # initialize the data path
-        self.DATA_PATH = self.ROOT_DIR + '/data/raw/'
+        self.DATA_PATH = '/opt/sci_jitai/'
 
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/schedule/'
@@ -113,11 +113,9 @@ class Schedule:
     def generate_schedule_retrieval_df(self, subject:str, date:str):
         # get the path to the sensor manager service file
         sensor_manager_service_path = self.DATA_PATH + subject + '@scijitai_com/logs-watch/' + date + '/Common/Watch-EMAManager.log.csv'
-
         #check if the sensor manager service file exists
         if not os.path.exists(sensor_manager_service_path):
             logger.error("generate_schedule_retrieval_df(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
-            print("generate_schedule_retrieval_df(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
         
         # read the Watch-EMAManager.log.csv file
         logger.info(f"generate_schedule_retrieval_df(): Reading Watch-EMAManager.log.csv file for {subject} on {date}")
@@ -157,10 +155,11 @@ class Schedule:
     
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
-        # print(schedule_generation_df) 
         try:
             #replace any AST in timestamp with EST
             schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('AST', 'EST')
+            #replace any AST in timestamp with EST
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('CDT', 'EST')
             # get the first item in the timestamp column
             timestamp = schedule_generation_df.iloc[0]['timestamp']
         except Exception as e:
@@ -180,7 +179,6 @@ class Schedule:
         first_jitai = self.extract_info_from_schedule_df(schedule_generation_df, 'first_jitai')
         second_jitai = self.extract_info_from_schedule_df(schedule_generation_df, 'second_jitai')
         eod_prompt = str(int(wake_time) + 13 * 60 * 60 * 1000)
-
         # get goalType, jitai1, jitai2
         goalType, jitai1, jitai2 = self.process_schedule_retrieval(subject, timestamp)
         # create a schedule_df with columns: date, wake_time, week, day, message_type, start_prompt
@@ -188,6 +186,7 @@ class Schedule:
         schedule_df = pd.DataFrame(columns=['date', 'wake_time', 'week', 'day', 'message_type', 'message_note', 'start_prompt'])
         # add the goal_settings to the schedule_df
         schedule_df = schedule_df.append({'date': timestamp, 'wake_time': wake_time, 'week': week, 'day': dayIndex, 'message_type': 'goal_settings', 'message_note': goalType, 'start_prompt': goal_settings}, ignore_index=True)
+
         # add the first_jitai to the schedule_df
         schedule_df = schedule_df.append({'date': timestamp, 'wake_time': wake_time, 'week': week, 'day': dayIndex, 'message_type': 'first_jitai', 'message_note': jitai1, 'start_prompt': first_jitai}, ignore_index=True)
         # add the second_jitai to the schedule_df
@@ -198,7 +197,6 @@ class Schedule:
 
         # add an user_id column to the beginning of the schedule_df
         schedule_df.insert(0, 'user_id', subject)
-
         # convert the wake_time and the start_prompt to datetime string with format HH:MM from epoch time in milliseconds
         logger.info(f"process_schedule_generation(): Converting the wake_time and the start_prompt to datetime string with format HH:MM from epoch time for {subject} on {day}")
         schedule_df['wake_time'] = schedule_df['wake_time'].apply(lambda x: datetime.datetime.fromtimestamp(int(x)/1000).strftime('%H:%M'))
@@ -209,7 +207,6 @@ class Schedule:
 
     def process_schedule_retrieval(self, subject: str, day: str):
         schedule_retrieval_df = self.generate_schedule_retrieval_df(subject, day)
-
         logger.info(f"process_schedule_retrieval(): Retrieving goalType, jitai1, jitai2 for {subject} on {day}")
         # get the goalType
         goalType = self.extract_info_from_schedule_df(schedule_retrieval_df, 'goalType')
@@ -252,6 +249,3 @@ class Schedule:
         logger.info(f"process_all_user(): Saving schedule_df to a csv file done")
 
         return schedule_df
-    
-# schedule_obj = Schedule()
-# schedule_obj.process_all_user("2023-03-13", ["user09"])

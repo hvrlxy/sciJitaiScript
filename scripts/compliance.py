@@ -19,7 +19,7 @@ class Compliance:
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
         # initialize the data path
-        self.DATA_PATH = self.ROOT_DIR + '/data/raw/'
+        self.DATA_PATH = '/opt/sci_jitai/'
 
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/schedule/'
@@ -134,6 +134,7 @@ class Compliance:
             battery_df = pd.read_csv(battery_log_file, names=['datetime', 'info', 'battery_level', 'charging'])
             # replace AST with EDT in datetime
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: x.replace('AST', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: x.replace('CDT', 'EDT'))
             #convert datetime from format %a %b %d %H:%M:%S %Z %Y to epoch milliseconds
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%a %b %d %H:%M:%S %Z %Y').timestamp() * 1000)
             # get the row with the closest datetime to the scheduled_prompt_epoch
@@ -221,7 +222,3 @@ class Compliance:
         # save the compliance report to csv
         compliance_df.to_csv(self.ROOT_DIR + f'/reports/compliance/{user}/{date}.csv')
         return compliance_df
-
-# obj = Compliance()
-# df = obj.save_compliance_report('user06', '2023-04-10')
-# print(df)

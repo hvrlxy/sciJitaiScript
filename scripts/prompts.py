@@ -5,6 +5,7 @@ from unzip_all import UnZip
 import os
 import logging
 import traceback
+from globals import delete_unzipped_files
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -37,7 +38,7 @@ class Prompts:
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
         # initialize the data path
-        self.DATA_PATH = self.ROOT_DIR + '/data/raw/'
+        self.DATA_PATH = '/opt/sci_jitai/'
 
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/prompts/'
@@ -417,10 +418,12 @@ class Prompts:
             try:
                 logger.info(f"process_all_user(): Processing {user} on {day}")
                 self.read_all_message_df(user, day)
+                delete_unzipped_files(user)
             except Exception as e:
                 logger.error(f"process_all_user(): Error processing {user} on {day}")
                 logger.error(traceback.format_exc())
                 # print(traceback.format_exc())
+                delete_unzipped_files(user)
                 continue
 
 

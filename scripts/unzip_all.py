@@ -4,7 +4,7 @@ import datetime
 import sys, os
 import warnings
 import pyzipper
-import re
+import shutil
 import logging
 import traceback
 
@@ -39,8 +39,15 @@ logger.addHandler(file_handler)
 # Initialize project root
 #  TODO: change this to the root directory of the project in your local machine/server
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
-DATA_PATH = ROOT_DIR + '/data/raw/'
+DATA_PATH = '/opt/sci_jitai/'
 
+# remove directory with read-only files
+def rm_dir_readonly(func, path, _):
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+    
+    
 class UnZip:
     def unzip_raw_auc_file(self, path, password = 'TIMEisthenewMICROTStudy-NUUSC'):
         '''
@@ -89,30 +96,23 @@ class UnZip:
         '''
 
         # check if there is any zip file in the folder
-        path_logs = f'{DATA_PATH}{subject}@scijitai_com/logs/{date}/'
+        # path_logs = f'{DATA_PATH}{subject}@scijitai_com/logs/{date}/'
         path_logs_watch = f'{DATA_PATH}{subject}@scijitai_com/logs-watch/{date}/'
-
-        path_data = f'{DATA_PATH}{subject}@scijitai_com/data/{date}/'
-        path_data_watch = f'{DATA_PATH}{subject}@scijitai_com/data-watch/{date}/'
-        #add files in path_logs
-        files = os.listdir(path_logs)
+        # #add files in path_logs
+        # files = os.listdir(path_logs)
         #add files in path_logs_watch
-        files += os.listdir(path_logs_watch)
-        #add files in path_data
-        files += os.listdir(path_data)
-        #add files in path_data_watch
-        files += os.listdir(path_data_watch)
+        files = os.listdir(path_logs_watch)
 
         # check if there is any files in the folder ending with zip
         if not any([file.endswith('.zip') for file in files]):
             print(f'No zip file found for {subject} on {date}')
             return
-        try:
-            print("unzip file in logs folder")
-            self.unzip_raw_auc_file(path_logs)
-        except Exception as e:
-            print(traceback.format_exc())
-            return ValueError(f'Error reading file: {path_logs} - Check if the file exists')
+        # try:
+        #     print("unzip file in logs folder")
+        #     self.unzip_raw_auc_file(path_logs)
+        # except Exception as e:
+        #     print(traceback.format_exc())
+        #     return ValueError(f'Error reading file: {path_logs} - Check if the file exists')
 
         try:
             print("unzip file in logs-watch folder")
@@ -120,20 +120,6 @@ class UnZip:
         except Exception as e:
             print(traceback.format_exc())
             return ValueError(f'Error reading file: {path_logs_watch} - Check if the file exists')
-
-        try:
-            print("unzip file in data folder")
-            self.unzip_raw_auc_file(path_data)
-        except Exception as e:
-            print(traceback.format_exc())
-            return ValueError(f'Error reading file: {path_data} - Check if the file exists')
-
-        try:
-            print("unzip file in data-watch folder")
-            self.unzip_raw_auc_file(path_data_watch)
-        except Exception as e:
-            print(traceback.format_exc())
-            return ValueError(f'Error reading file: {path_data_watch} - Check if the file exists')
 
         print("unzip file done")
 
@@ -162,54 +148,6 @@ class UnZip:
             logger.error(f'Error reading file: {path_logs_watch} - Check if the file exists')
             return ValueError(f'Error reading file: {path_logs_watch} - Check if the file exists')
 
-    def unzip_data_watch_folder(self, subject:str, date:str):
-        '''
-        unzip all the phone logs folder
-        :param subject: str
-        :param date: str
-        :return: None
-        '''
-
-        # check if there is any zip file in the folder
-        path_data_watch = f'{DATA_PATH}{subject}@scijitai_com/data-watch/{date}/'
-        #add files in path_data_watch
-        files = os.listdir(path_data_watch)
-
-        # check if there is any files in the folder ending with zip
-        if not any([file.endswith('.zip') for file in files]):
-            logger.info(f'No zip file found for {subject} on {date}')
-            return
-        try:
-            logger.info(f'Unzipping data-watch folder for {subject} on {date}')
-            self.unzip_raw_auc_file(path_data_watch)
-        except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(f'Error reading file: {path_data_watch} - Check if the file exists')
-
-    def unzip_logs_folder(self, subject:str, date:str):
-        '''
-        unzip all the phone logs folder
-        :param subject: str
-        :param date: str
-        :return: None
-        '''
-
-        # check if there is any zip file in the folder
-        path_logs = f'{DATA_PATH}{subject}@scijitai_com/logs/{date}/'
-        #add files in path_logs
-        files = os.listdir(path_logs)
-
-        # check if there is any files in the folder ending with zip
-        if not any([file.endswith('.zip') for file in files]):
-            logger.info(f'No zip file found for {subject} on {date}')
-            return
-        try:
-            logger.info(f'Unzipping logs folder for {subject} on {date}')
-            self.unzip_raw_auc_file(path_logs)
-        except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(f'Error reading file: {path_logs} - Check if the file exists')
-
     def unzip_all(self, days = 3, subject_list = []):
 
         # get a list of all the dates from 10 days ago to today
@@ -223,3 +161,23 @@ class UnZip:
                 except Exception as e:
                     print(f'Error unzipping {subject} on {date}')
                     pass
+
+    def delete_all_unzip_files(self, subject, date):
+        folders_type = ['logs', 'data', 'logs-watch', 'data-watch']
+        for folder_type in folders_type:
+            try: 
+                path = f'{DATA_PATH}{subject}@scijitai_com/{folder_type}/{date}/'
+                folders = os.listdir(path)
+                # loop though all folders 
+                for folder in folders:
+                    # list all the files in the folder
+                    try:
+                        if not folder.endswith(".zip"):
+                            shutil.rmtree(os.path.join(path, folder), onerror=rm_dir_readonly)
+                    except Exception as e:
+                        print(f'Error {e}, could not delete {folder} for {subject} on {date}')
+                        continue
+            except Exception as e:
+                print(e)
+                pass
+            

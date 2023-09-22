@@ -40,7 +40,7 @@ class Battery:
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
         # initialize the data path
-        self.DATA_PATH = self.ROOT_DIR + '/data/raw/'
+        self.DATA_PATH = '/opt/sci_jitai/'
 
         # create a path to the reports folder
         self.REPORTS_PATH = self.ROOT_DIR + '/reports/'
@@ -71,6 +71,8 @@ class Battery:
         # check if the day format is YYYY-MM-DD by converting it to datetime
         try:
             datetime.datetime.strptime(date, '%Y-%m-%d')
+            #nget the year 
+            year = int(date.split('-')[0])
         except ValueError:
             logger.error("get_battery_data(): Incorrect data format, should be YYYY-MM-DD")
             logger.error(traceback.format_exc())
@@ -116,9 +118,12 @@ class Battery:
         # read the battery file into a pandas dataframe
         battery_df = pd.read_csv(battery_file_path, names=['timestamp', 'info', 'battery_level', 'charging'])
         # replace EDT to EST
-        battery_df['timestamp'] = battery_df['timestamp'].str.replace('EDT', 'EST')
+        battery_df['timestamp'] = battery_df['timestamp'].apply(lambda x: x.rsplit(' ', 1)[0])
+        battery_df['timestamp'] = battery_df['timestamp'].apply(lambda x: x.rsplit(' ', 1)[0])
         # turn the timestamp column into a datetime object
-        battery_df['timestamp'] = pd.to_datetime(battery_df['timestamp'], format='%a %b %d %H:%M:%S %Z %Y')
+        battery_df['timestamp'] = pd.to_datetime(battery_df['timestamp'], format='%a %b %d %H:%M:%S')
+        # set the year of the timestamp column
+        battery_df['timestamp'] = battery_df['timestamp'].apply(lambda x: x.replace(year=year))
         #create epoch column
         battery_df['epoch'] = battery_df['timestamp'].astype(np.int64) // 10 ** 6
         # remove info and charging columns

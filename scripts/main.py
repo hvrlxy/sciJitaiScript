@@ -2,27 +2,24 @@ from schedule import Schedule
 from unzip_all import UnZip
 from prompts import Prompts
 from auc import PlotSubject
-from auto_scp import AutoSCP
 from proximal import Proximal
 import warnings
 import os
 import logging
 import datetime
-import traceback
 from compliance import Compliance
+from globals import *
+from PAstats import *
 
 warnings.filterwarnings("ignore")
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
-khoury_id = 'hle5'
-ppk_password = 'lemyha00'
-ppk_path = ROOT_DIR + '/ssh/id_ed25519.ppk'
-nums_day = 12
+nums_day = 20
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
 
-logs_path = os.path.dirname(os.path.abspath(__file__)) + '/..' + '/logs/' + today
+logs_path = os.path.dirname(os.path.abspath(__file__)) + '/../logs/' + today
 
 # create a logs folder of today's date if it doesn't exist
 if not os.path.exists(logs_path):
@@ -49,19 +46,6 @@ yesterday = datetime.datetime.today()
 # get a list of the last 10 days from yesterday with format YYYY-MM-DD
 last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
 last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
-# TODO: list of subjects
-subjects = ['user06', "scijitai_01", "scijitai_02", "scijitai_03", "scijitai_04", "scijitai_05"]
-
-subject_dict = {
-    "user06": 2500,
-    "scijitai_01": 2000,
-    "scijitai_02": 2000,
-    "scijitai_03": 2000,
-    "scijitai_04": 2000,
-    "scijitai_05": 2000
-}
-# initialize the auto scp class
-auto_scp = AutoSCP(khoury_id, ppk_password, ppk_path)
 
 # initialize the schedule class
 schedule = Schedule()
@@ -80,40 +64,7 @@ compliance = Compliance()
 
 # initiliaze the proximal class
 proximal = Proximal()
-
-# get the data from the server for the last 10 days
-for day in last_10_days:
-    for subject in subjects:
-        logger.info('Getting data for subject: ' + subject + ' for day: ' + day)
-        # get logs-watch 
-        try:
-            auto_scp.get_logs_watch(subject, day)
-        except Exception as e:
-            logger.error('Error getting logs-watcher logs for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        logger.info('Finished getting data for subject: ' + subject + ' for day: ' + day)
-        try:
-            auto_scp.get_data(subject, day)
-        except Exception as e:
-            logger.error('Error getting data for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        try:
-            auto_scp.get_logs(subject, day)
-        except Exception as e:
-            logger.error('Error getting logs for day: ' + day)
-            logger.error(traceback.format_exc())
-            print('Error getting logs-watcher logs for day: ' + day)
-        # get data-watcher logs
-        try:
-            auto_scp.get_data_watch(subject, day)
-        except Exception as e:
-            logger.error('Error getting data-watcher logs for day: ' + day)
-            logger.error(traceback.format_exc())
-        print('Finished getting data for subject: ' + subject + ' for day: ' + day)
-    # time.sleep(5)
-
+    
 # unzip all the files
 unzip.unzip_all(days=nums_day, subject_list=subjects)
 
@@ -133,31 +84,38 @@ for day in last_10_days:
         logger.error('Error processing prompts for day: ' + day)
         continue
 
+last_x_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day + 7)]
+last_x_days = [day.strftime('%Y-%m-%d') for day in last_x_days]
 # plot the auc for the last 10 days
 for day in last_10_days:
     for subject in subjects:
         try:
-            plot_subject.plot_subject(subject, day, subject_dict[subject])
+            plot_subject.plot_subject(subject, day, int(auc_dict[subject]))
         except Exception as e:
             logger.error('Error plotting subject: ' + subject + ' for day: ' + day)
+            delete_unzipped_files(subject)
             continue
-
-# generate compliance report for the last 10 days
-for day in last_10_days:
-    for subject in subjects:
+        
         try:
             compliance.save_compliance_report(subject, day)
         except Exception as e:
             logger.error('Error generating compliance report for subject: ' + subject + ' for day: ' + day)
+            delete_unzipped_files(subject)
             continue
-
-# generate proximal report for today
+        
+        delete_unzipped_files(subject)
+        
+# generate proximal report
 for subject in subjects:
     try:
-        proximal.get_weekly_proximal_data(subject, today)
+        print("compute proximal data for subject: " + subject)
+        proximal.get_weekly_proximal_data(subject, today, start_dates_dict[subject], threshold_dict[subject])
     except Exception as e:
         logger.error('Error generating proximal report for subject: ' + subject + ' for day: ' + today)
+        delete_unzipped_files(subject)
         continue
-
-# upload the reports to the server
-auto_scp.upload_reports()
+    
+    delete_unzipped_files(subject)
+ # get the baseline stats summary for all participants   
+get_baseline_stats_for_all()
+ 

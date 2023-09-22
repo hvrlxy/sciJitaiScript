@@ -46,10 +46,10 @@ class PlotSubject:
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
         # initialize the data path
-        self.DATA_PATH = self.ROOT_DIR + '/data/raw/'
+        self.DATA_PATH = '/opt/sci_jitai/'
 
         # initialize the schedule path
-        self.FIGURES_PATH = self.ROOT_DIR + '/figures/auc/'
+        self.FIGURES_PATH = '/home/hle5/mhealth-sci-dashboard/templates/auc/'
 
         # initialize the unzip class
         self.unzip = UnZip()
@@ -160,6 +160,8 @@ class PlotSubject:
         auc_df = auc_df[['epoch', 'AUC']]
         # sort the dataframe by epoch
         auc_df = auc_df.sort_values(by=['epoch'])
+        # remove all rows with epoch = 0
+        auc_df = auc_df[auc_df['epoch'] != 0]
         # remove NaN values
         auc_df = auc_df.dropna()
         auc_df = self.impute_auc_df(auc_df)
@@ -232,6 +234,8 @@ class PlotSubject:
         # pa_df['epoch'] = pa_df['epoch'].apply(lambda x: x + 180000)
         # turn the epoch milliseconds to datetime
         pa_df['timestamp'] = pd.to_datetime(pa_df['epoch'], unit='ms')
+        # drop all rows with epoch = 0
+        pa_df = pa_df[pa_df['epoch'] != 0]
         # get the epoch list 
         epoch_list = pa_df['epoch'].tolist()
         # remove epoch column
@@ -252,7 +256,7 @@ class PlotSubject:
         # convert the timestamp to epoch time in milliseconds
         pa_df['timestamp'] = pa_df['timestamp'].apply(lambda x: int(x.timestamp() * 1000))
         # save the df to a test file
-        pa_df.to_csv(self.ROOT_DIR + '/test.csv')
+        # pa_df.to_csv(self.ROOT_DIR + '/test.csv')
         # loop through the pa_df
         for index, row in pa_df.iterrows():
             # if index is 0, skip
@@ -294,7 +298,7 @@ class PlotSubject:
         # return 3 values
         return total_samples, samples, percentage
 
-    def plot_subject(self, subject, day, threshold, show = False):
+    def plot_subject(self, subject, day, threshold, show = False, get_offline = False):
         '''
         plot the subject's data
         :param subject: str
@@ -411,6 +415,11 @@ class PlotSubject:
         offline_df['epoch'] = offline_df['epoch'] + pd.Timedelta(minutes=3)
         pa_df['timestamp'] = pa_df['timestamp'] + pd.Timedelta(minutes=3)
         
+        if get_offline:
+            # convert the epoch column to epoch milliseconds
+            offline_df['epoch'] = offline_df['epoch'].astype(np.int64) // 10 ** 6
+            return offline_df
+        
         # real time PA is the max entry in the pa_df
         try:
             real_time_PA = pa_df['pa'].iloc[-1]
@@ -481,10 +490,14 @@ class PlotSubject:
             os.mkdir(self.FIGURES_PATH + day)
             logger.info(f"plot_subject(): Created {day} folder in figures folder")
         # save the plot
+        # print(self.FIGURES_PATH + day + '/' + subject + '.html')
         fig.write_html(self.FIGURES_PATH + day + '/' + subject + '.html')
-        logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
-        fig.write_image(self.FIGURES_PATH + day + '/' + subject + '.png', scale = 5)
         logger.info(f"plot_subject(): Saved {subject}.html plot in {day} folder")
 
         if show:
             fig.show()
+            
+# obj = PlotSubject()
+# print(
+#     obj.plot_subject("scijitai_05", "2023-07-09", 2000, get_offline = True)
+# )

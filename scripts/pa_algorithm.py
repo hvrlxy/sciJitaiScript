@@ -36,9 +36,8 @@ class PAbouts:
         self.subject_full = subject + '@scijitai_com'
         self.date = date
 
-        self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/../'
-
-        self.LOGS_WATCH_PATH = self.ROOT_DIR + "data/raw/" + self.subject_full + '/logs-watch/' + self.date
+        self.ROOT_DIR = '/opt/sci_jitai/'
+        self.LOGS_WATCH_PATH = self.ROOT_DIR + self.subject_full + '/logs-watch/' + self.date
 
     def retrieve_auc_data(self):
         unzip = UnZip()
