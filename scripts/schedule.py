@@ -46,47 +46,20 @@ class Schedule:
         self.unzip = UnZip()
 
     def generate_day_schedule(self, subject: str, day: str):
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("generate_day_schedule(): Incorrect data format, should be YYYY-MM-DD")
-            print("generate_day_schedule(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("generate_day_schedule(): Subject not found in data/raw folder")
-            print("generate_day_schedule(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("generate_day_schedule(): Day not found in subject logs-watch folder")
-            print("generate_day_schedule(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("generate_day_schedule(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            # print(traceback.format_exc())
-            print(f'Error unzipping {subject} on {day}')
-        logger.info(f"generate_day_schedule(): Unzipping logs-watch folder for {subject} on {day} done")
 
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("generate_day_schedule(): Common folder not found in subject logs-watch folder")
-            print("generate_day_schedule(): Common folder not found in subject logs-watch folder")
+            # print("generate_day_schedule(): Common folder not found in subject logs-watch folder")
 
         # search for the Watch-EMAManager.log.csv file inside the Common folder
         watch_sensor_manager_service_path = common_folder_path + 'Watch-EMAManager.log.csv'
         # check if the Watch-EMAManager.log.csv file exists
         if not os.path.exists(watch_sensor_manager_service_path):
             logger.error("generate_day_schedule(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
-            print("generate_day_schedule(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
+            # print("generate_day_schedule(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
             return None
         
         # read the Watch-EMAManager.log.csv file
@@ -112,7 +85,7 @@ class Schedule:
 
     def generate_schedule_retrieval_df(self, subject:str, date:str):
         # get the path to the sensor manager service file
-        sensor_manager_service_path = self.DATA_PATH + subject + '@scijitai_com/logs-watch/' + date + '/Common/Watch-EMAManager.log.csv'
+        sensor_manager_service_path = '/home/hle5/sciJitaiScript/logs-watch/Common/Watch-EMAManager.log.csv'
         #check if the sensor manager service file exists
         if not os.path.exists(sensor_manager_service_path):
             logger.error("generate_schedule_retrieval_df(): Watch-EMAManager.log.csv file not found in subject logs-watch folder")
@@ -216,6 +189,25 @@ class Schedule:
         jitai2 = self.extract_info_from_schedule_df(schedule_retrieval_df, 'jitai2')
         logger.info(f"process_schedule_retrieval(): Retrieving goalType, jitai1, jitai2 for {subject} on {day} done")
         return goalType, jitai1, jitai2
+    
+    def process_schedule_pid_at_date(self, user: str, day: str):
+        try:
+            logger.info(f"process_all_user(): Generating schedule_df for {user} on {day}")
+            # get the schedule_df for the user
+            user_schedule_df = self.process_schedule_generation(user, day)
+            # check if the date folder exists in the schedule folder
+            if not os.path.exists(f"{self.SCHEDULE_PATH}/{day}"):
+                # create the date folder
+                os.mkdir(f"{self.SCHEDULE_PATH}/{day}")
+
+            # save the user_schedule_df to a csv file
+            user_schedule_df.to_csv(f"{self.SCHEDULE_PATH}/{day}/{user}.csv", index=False)
+            logger.info(f"process_schedule_pid_at_date(): Generating schedule_df for {user} on {day} done")
+            return True
+        except Exception as e:
+            logger.error(f"process_schedule_pid_at_date(): Error while generating schedule_df for {user} on {day}: {e}")
+            logger.error(traceback.format_exc())
+            return False
 
     def process_all_user(self, day: str, user_list):
         # create a schedule_df with columns: date, wake_time, week, day, message_type, start_prompt
