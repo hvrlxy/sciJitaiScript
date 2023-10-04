@@ -45,9 +45,6 @@ class PlotSubject:
         # initialize the project root
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
-        # initialize the data path
-        self.DATA_PATH = '/opt/sci_jitai/'
-
         # initialize the schedule path
         self.FIGURES_PATH = '/home/hle5/mhealth-sci-dashboard/templates/auc/'
 
@@ -107,36 +104,9 @@ class PlotSubject:
         :param day: str
         :return: pd.DataFrame
         '''
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_auc_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_auc_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_auc_df(): Subject not found in data/raw folder")
-            raise ValueError("read_auc_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_auc_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_auc_df(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_auc_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            # print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_auc_df(): Unzipping logs-watch folder for {subject} on {day} done")
 
         # get all the non-zip files in the logs-watch folder's day folder
-        files = [f for f in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/' + day) if
+        files = [f for f in os.listdir('/home/hle5/sciJitaiScript/logs-watch/') if
                  f.endswith('.zip') == False]
         # sort the files
         files.sort()
@@ -145,11 +115,11 @@ class PlotSubject:
 
         for folder in files:
             # check if the file Watch-AccelSampling.log.csv exists
-            if not os.path.exists(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-AccelSampling.log.csv'):
+            if not os.path.exists("/home/hle5/sciJitaiScript/logs-watch/" + folder + '/Watch-AccelSampling.log.csv'):
                 logger.error(f"read_auc_df(): Watch-AccelSampling.log.csv not found in logs-watch {folder}")
                 continue
             # read the Watch-AccelSampling.log.csv file
-            df = pd.read_csv(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-AccelSampling.log.csv',
+            df = pd.read_csv('/home/hle5/sciJitaiScript/logs-watch/' + folder + '/Watch-AccelSampling.log.csv',
                              header=None, names=['timestamp', 'type', 'epoch', 'sr', 'x', 'y', 'z'])
 
             auc_df = auc_df.append(df)
@@ -174,37 +144,8 @@ class PlotSubject:
         :param day: str
         :return: pd.DataFrame
         '''
-
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_pa_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_pa_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_pa_df(): Subject not found in data/raw folder")
-            raise ValueError("read_pa_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_pa_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_pa_df(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_pa_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_pa_df(): Unzipping logs-watch folder for {subject} on {day} done")
-
         # get all the non-zip files in the logs-watch folder's day folder
-        files = [f for f in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/' + day) if
+        files = [f for f in os.listdir('/home/hle5/sciJitaiScript/logs-watch/') if
                  f.endswith('.zip') == False]
         # sort the files
         files.sort()
@@ -213,13 +154,13 @@ class PlotSubject:
 
         for folder in files:
             # check if the file Watch-PAMinutes.log.csv exists
-            if not os.path.exists(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-PAMinutes.log.csv'):
+            if not os.path.exists('/home/hle5/sciJitaiScript/logs-watch/' + folder + '/Watch-PAMinutes.log.csv'):
                 logger.error(f"read_pa_df(): Watch-PAMinutes.log.csv not found in logs-watch {folder}")
                 continue
             
             try:
                 # read the Watch-PAMinutes.log.csv file
-                df = pd.read_csv(self.DATA_PATH + subject_full + '/logs-watch/' + day + '/' + folder + '/Watch-PAMinutes.log.csv',
+                df = pd.read_csv('/home/hle5/sciJitaiScript/logs-watch/' + folder + '/Watch-PAMinutes.log.csv',
                                     header=None, names=['timestamp', 'type', 'epoch', 'pa'])
             except Exception as e:
                 continue
@@ -373,6 +314,11 @@ class PlotSubject:
         bout = PAbouts(subject, day)
         try:
             offline_df , daily_PA = bout.calculate_PA(epoch_list, threshold)
+            # save offline_df to csv file under /home/hle5/sciJitaiScript/reports/pa_df/subject/date folder
+            #check if folder exists
+            if not os.path.exists(self.ROOT_DIR + '/reports/pa_df/' + subject):
+                os.makedirs(self.ROOT_DIR + '/reports/pa_df/' + subject)
+            offline_df.to_csv(self.ROOT_DIR + '/reports/pa_df/' + subject + '/' + f'/{day}.csv')
         except Exception as e:
             daily_PA = 0
             offline_df = pd.DataFrame(columns=['epoch', 'PA'])
@@ -499,5 +445,5 @@ class PlotSubject:
             
 # obj = PlotSubject()
 # print(
-#     obj.plot_subject("scijitai_05", "2023-07-09", 2000, get_offline = True)
+#     obj.plot_subject("scijitai_13", "2023-08-29", 2000, get_offline = False, show=True)
 # )

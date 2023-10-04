@@ -36,41 +36,48 @@ def get_baseline_stats_for_all():
     baseline_df = pd.DataFrame()
     
     # get the list of participant id
-    for pid in subjects:
+    for pid in subjects[::-1]:
         # get the baseline stats for each participant
         baseline_stats = get_participant_baseline_stats(pid)
-        # create a dataframe for the baseline stats
-        new_pid = pd.DataFrame(baseline_stats, columns=[pid])
-        #concatenate the new dataframe to the baseline dataframe
-        baseline_df = pd.concat([baseline_df, new_pid], axis=1)
+        # replace nan with "NO_DATA"
+        baseline_stats = [str(x) for x in baseline_stats]
+        baseline_stats = ['NO_DATA' if x == 'nan' else x for x in baseline_stats]
+        # add the baseline stats to the dataframe as a new column, if there is a mismatch in length, pad the shorter list with "N/A"
+        if len(baseline_stats) < len(baseline_df):
+            baseline_stats = baseline_stats + ['N/A'] * (len(baseline_df) - len(baseline_stats))
+        elif len(baseline_stats) >= len(baseline_df):
+            baseline_df = baseline_df.reindex(range(len(baseline_stats)))
+            baseline_df = baseline_df.fillna('N/A')
+        baseline_df[pid] = baseline_stats
     
     # remove the rows at the tail of the table where all the values are NO_DATA
-    baseline_df = baseline_df.loc[~(baseline_df == 'NO_DATA').all(axis=1)]
+    baseline_df = baseline_df.loc[~(baseline_df == 'N/A').all(axis=1)]
     
     # create a date column at the front, and fill it from 1 to the length of the dataframe
     baseline_df.insert(0, 'date', range(1, len(baseline_df) + 1))
     # set date as index
     baseline_df.set_index('date', inplace=True)
 
-    # turn all NO_DATA to NaN
-    baseline_df = baseline_df.replace('NO_DATA', np.nan)
-    # turn all values into int  
-    baseline_df = baseline_df.astype(float)
+    # create a row, which is the sum of all the numerical values in each column, ignore the "N/A" values
+    baseline_df.loc['sum']=baseline_df.apply(lambda x: pd.to_numeric(x,errors='coerce')).sum(axis=0).round(3)
+    #create a row, which is the number of numerical values in each column, ignore the "N/A" values, ignore the last row
+    baseline_df.loc['count']=baseline_df.apply(lambda x: pd.to_numeric(x,errors='coerce')).count(axis=0).round(3)
+    # minus one from the count row, take min value of 0
+    baseline_df.loc['count'] = baseline_df.loc['count'] - 1
+    baseline_df.loc['count'] = baseline_df.loc['count'].clip(lower=0)
     
-    # add a another row, with "mean" as the index, and the value is the mean of each column, ignoring the NaN
-    baseline_df.loc['mean'] = baseline_df.mean(axis=0, skipna=True)
-    # add another row, with "std" as the index, and the value is the std of each column, ignoring the NaN
-    baseline_df.loc['std'] = baseline_df.std(axis=0, skipna=True)
-    # add a row with index "num_valid", and the values is the number of days with no NaN values
-    baseline_df.loc['num_days_valid'] = baseline_df.count(axis=0)
-    # minus 2 from the num_days_valid row, because the last 2 rows are mean and std
-    baseline_df.loc['num_days_valid'] = baseline_df.loc['num_days_valid'] - 2
-    # reformat the float values to 2 decimal places
-    baseline_df = baseline_df.round(2)
-    
-    #replace NaN values with NO_DATA
-    baseline_df = baseline_df.replace(np.nan, 'NO_DATA')
-    
+    # create a row and take the sum/count, name it "average", if count is 0, set it to "N/A"
+    baseline_df.loc['average'] = baseline_df.apply(lambda x: x['sum']/x['count'] if x['count'] != 0 else 'N/A', axis=0)
+    #create a temp dataframe with the last 3 rows removed
+    baseline_df_temp = baseline_df.iloc[:-3]
+    # create a row called std, whihc is the standard deviation of each column in the temp df, ignore the "N/A" values
+    baseline_df.loc['std'] = baseline_df_temp.apply(lambda x: pd.to_numeric(x,errors='coerce')).std(axis=0).round(3)
+    # round any numerical value to 3 decimal places
+    baseline_df = baseline_df.applymap(lambda x: round(x, 3) if isinstance(x, (int, float)) else x)
+    # replace NaN string with "N/A"
+    baseline_df = baseline_df.replace(np.nan, 'N/A', regex=True)
     # save the report as baseline_stats.csv in the reports folder
     baseline_df.to_csv("/home/hle5/sciJitaiScript/reports/baseline_stats.csv")    
     return baseline_df
+
+print(get_baseline_stats_for_all())

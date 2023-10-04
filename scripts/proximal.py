@@ -18,9 +18,6 @@ class Proximal:
         # initialize the project root
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
-        # initialize the data path
-        self.DATA_PATH = '/opt/sci_jitai/'
-
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/schedule/'
 
@@ -96,17 +93,15 @@ class Proximal:
     
     def get_total_pa_at_date(self, userID, date):
         # get the battery log file in the Common folder
-        pa_path = self.DATA_PATH + f'{userID}@scijitai_com/logs-watch/{date}/Common/Watch-Watch-PABoutInfo.log.csv'
+        pa_path = f'/home/hle5/sciJitaiScript/reports/pa_df/{userID}/{date}.csv'
         # if there is no such file, return 0
         if os.path.isfile(pa_path) == False:
             return 0
         # read the battery log file
         try:
-            pa_df = pd.read_csv(pa_path, names=["timestamp", "info", "value"])
+            pa_df = pd.read_csv(pa_path, names=["index", "epoch", "value"])
             #get the "value" column at the last row
-            pa_value = pa_df['value'].iloc[-1]
-            # parse by : and get the second value
-            pa_value = pa_value.split(': ')[1]
+            pa_value = int(pa_df['value'].iloc[-1])
             return pa_value
         except:
             return None
@@ -119,18 +114,15 @@ class Proximal:
         # create a list of epochs by incrementing the first epoch by 1.5 minutes until the last epoch of the day
         epoch_list = list(range(first_epoch, first_epoch + 24*60*60*1000, 90*1000))
         # get the pa_df
-        pa_df, total_pa = obj.calculate_PA(epoch_list, baseline)
-        print(total_pa)
+        pa_df, total_pa = obj.calculate_PA(epoch_list, baseline, userID, date)
+
         if compliance_df is None:
-            print("reach if statement")
             return "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", total_pa
         first_jitai, second_jitai = self.get_jitai_info(userID, date, compliance_df)
         # process the first jitai
         first_jitai_value, first_jitai_timestamp = self.process_proximal_with_timestamp(pa_df, first_jitai)
-        print(first_jitai_value, first_jitai_timestamp)
         # process the second jitai
         second_jitai_value, second_jitai_timestamp = self.process_proximal_with_timestamp(pa_df, second_jitai)
-        print(second_jitai_value, second_jitai_timestamp)
         if first_jitai != 0:
             # get the value 2 hours after the first jitai
             first_jitai_value_2h,_ = self.process_proximal_with_timestamp(pa_df, first_jitai + 2*60*60*1000)
@@ -241,4 +233,4 @@ class Proximal:
         result_df.to_csv(self.ROOT_DIR + f'/reports/proximal/{userID}.csv', index=False)
         return result_df
 
-# print(Proximal().get_weekly_proximal_data("scijitai_06", "2023-08-15", "2023-08-07", 2000))
+# print(Proximal().get_weekly_proximal_data("scijitai_05", "2023-10-03", "2023-06-23", 2000))

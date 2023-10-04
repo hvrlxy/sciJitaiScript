@@ -40,22 +40,19 @@ class PAbouts:
         self.LOGS_WATCH_PATH = self.ROOT_DIR + self.subject_full + '/logs-watch/' + self.date
 
     def retrieve_auc_data(self):
-        unzip = UnZip()
-        unzip.unzip_logs_watch_folder(self.subject, self.date)
-
         auc_df = pd.DataFrame(columns=['timestamp', 'type', 'epoch', 'sr', 'x', 'y', 'z'])
 
         # get all the non-zip files in the logs-watch folder's day folder
-        files = [f for f in os.listdir(self.LOGS_WATCH_PATH) if not f.endswith('.zip')]
+        files = [f for f in os.listdir('/home/hle5/sciJitaiScript/logs-watch/') if not f.endswith('.zip')]
         # sort the files
         files.sort()
         for folder in files:
             # check if the file Watch-AccelSampling.log.csv exists
-            if not os.path.exists(self.LOGS_WATCH_PATH + '/' + folder + '/Watch-AccelSampling.log.csv'):
+            if not os.path.exists('/home/hle5/sciJitaiScript/logs-watch/' + folder + '/Watch-AccelSampling.log.csv'):
                 logger.error(f"read_auc_df(): Watch-AccelSampling.log.csv not found in logs-watch {folder}")
                 continue
             # read the Watch-AccelSampling.log.csv file
-            df = pd.read_csv(self.LOGS_WATCH_PATH + '/' + folder + '/Watch-AccelSampling.log.csv',
+            df = pd.read_csv('/home/hle5/sciJitaiScript/logs-watch/' + folder + '/Watch-AccelSampling.log.csv',
                                 header=None, names=['timestamp', 'type', 'epoch', 'sr', 'x', 'y', 'z', 'unknown', 'unknown2', 'unknown3', 'unknown4'])
             #remove all the rows with unknown values not NaN
             df = df[df['unknown'].isna()]
@@ -70,7 +67,24 @@ class PAbouts:
 
         return auc_df
 
-    def calculate_PA(self, epoch_list, threshold = 2000):
+    def calculate_PA(self, epoch_list, threshold = 2000, user = None, date = None):
+        if user is not None and date is not None:
+            # check if the pa_df is already computed
+            pa_df_path = f'/home/hle5/sciJitaiScript/reports/pa_df/{user}/{date}.csv'
+            if os.path.exists(pa_df_path):
+                # read the pa_df
+                pa_df = pd.read_csv(pa_df_path)
+                # convert the epoch column to int
+                pa_df['epoch'] = pa_df['epoch'].astype(int)
+                # get the number of rows where the PA is greater than the rows before it
+                bouts = pa_df[pa_df['PA'] > pa_df['PA'].shift(1)].shape[0] * 1.5
+                # if the number of rows is 0, then return None for bouts
+                if pa_df.shape[0] == 0:
+                    return None, None
+                else:
+                    return pa_df, bouts
+            else:
+                return None, None
         auc_df = self.retrieve_auc_data()
 
         is_beginning = True 

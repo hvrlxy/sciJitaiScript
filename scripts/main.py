@@ -10,17 +10,16 @@ import datetime
 from compliance import Compliance
 from globals import *
 from PAstats import *
+import traceback
+from rsync import *
 
 warnings.filterwarnings("ignore")
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
-nums_day = 20
-
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
 
 logs_path = os.path.dirname(os.path.abspath(__file__)) + '/../logs/' + today
-
 # create a logs folder of today's date if it doesn't exist
 if not os.path.exists(logs_path):
     os.makedirs(logs_path)
@@ -43,9 +42,6 @@ logger.addHandler(file_handler)
 
 # get yesterday's date as format YYYY-MM-DD
 yesterday = datetime.datetime.today()
-# get a list of the last 10 days from yesterday with format YYYY-MM-DD
-last_10_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day)]
-last_10_days = [day.strftime('%Y-%m-%d') for day in last_10_days]
 
 # initialize the schedule class
 schedule = Schedule()
@@ -64,58 +60,70 @@ compliance = Compliance()
 
 # initiliaze the proximal class
 proximal = Proximal()
-    
-# unzip all the files
-unzip.unzip_all(days=nums_day, subject_list=subjects)
 
-# get the schedule for the last 10 days
-for day in last_10_days:
+def process_data_pid_at_date(pid, date, recomputed = False):
+    # check if computed
+    if (not recomputed) and check_if_computed(pid, date):
+        logger.info('Data for pid: ' + pid + ' at date: ' + date + ' has already been computed')
+        return
+    delete_logs_watch_folder()
+    #rsync the watch logs for the pid at date
+    get_watch_logs_for_pid(pid, date)
+    computed = True
     try:
-        schedule.process_all_user(day, subjects)
+        # first compute the schedule for the pid at date
+        computed = schedule.process_schedule_pid_at_date(pid, date) and computed
     except Exception as e:
-        logger.error('Error processing schedule for day: ' + day)
-        continue
-
-# get the prompts for the last 10 days
-for day in last_10_days:
+        logger.error('main.py::Error processing schedule for pid: ' + pid + ' at date: ' + date)
+        
     try:
-        prompts.process_all_user(day, subjects)
+        # next compute the prompts for the pid at date
+        computed = prompts.process_user_at_date(pid, date) and computed
     except Exception as e:
-        logger.error('Error processing prompts for day: ' + day)
-        continue
+        logger.error('main.py::Error processing prompts for pid: ' + pid + ' at date: ' + date)
+        
+    try:
+        # next compute the compliance for the pid at date
+        computed = (compliance.save_compliance_report(pid, date) is not None) and computed
+    except Exception as e:
+        logger.error('main.py::Error processing compliance for pid: ' + pid + ' at date: ' + date)
+    # next compute the plot for the pid at date
+    try:
+        plot_subject.plot_subject(pid, date, int(auc_dict[pid]))
+    except Exception as e:
+        logger.error('main.py::Error processing plot for pid: ' + pid + ' at date: ' + date)
+        
+    # check if the Common folder exists in the logs folder
+    if os.path.exists('/home/hle5/sciJitaiScript/logs-watch/Common'):
+        # add the pid and date to the computed list
+        add_date_to_computed(pid, date)
+        # print the computed message
+        print('Data for pid: ' + pid + ' at date: ' + date + ' has been added to computed json')
 
-last_x_days = [yesterday - datetime.timedelta(days=x) for x in range(0, nums_day + 7)]
-last_x_days = [day.strftime('%Y-%m-%d') for day in last_x_days]
-# plot the auc for the last 10 days
-for day in last_10_days:
-    for subject in subjects:
-        try:
-            plot_subject.plot_subject(subject, day, int(auc_dict[subject]))
-        except Exception as e:
-            logger.error('Error plotting subject: ' + subject + ' for day: ' + day)
-            delete_unzipped_files(subject)
-            continue
-        
-        try:
-            compliance.save_compliance_report(subject, day)
-        except Exception as e:
-            logger.error('Error generating compliance report for subject: ' + subject + ' for day: ' + day)
-            delete_unzipped_files(subject)
-            continue
-        
-        delete_unzipped_files(subject)
-        
-# generate proximal report
+recomputed_pid = []
 for subject in subjects:
-    try:
-        print("compute proximal data for subject: " + subject)
-        proximal.get_weekly_proximal_data(subject, today, start_dates_dict[subject], threshold_dict[subject])
-    except Exception as e:
-        logger.error('Error generating proximal report for subject: ' + subject + ' for day: ' + today)
-        delete_unzipped_files(subject)
-        continue
+    #get the start date for the subject
+    start_date = get_subject_start_date(subject)
+    #get the list of date from start date to yesterday
+    date_list = pd.date_range(start_date, yesterday).tolist()
+    # convert the date list to string
+    date_list = [date.strftime('%Y-%m-%d') for date in date_list]
+    #reverse the date list
+    date_list.reverse()
+    for date in date_list:
+        try:
+            process_data_pid_at_date(subject, date, recomputed=subject in recomputed_pid)
+        except Exception as e:
+            #print the traceback
+            print('main.py::Error processing data for pid: ' + subject + ' at date: ' + date)
+            logger.error(traceback.format_exc())
     
-    delete_unzipped_files(subject)
- # get the baseline stats summary for all participants   
-get_baseline_stats_for_all()
+for subject in subjects:
+    #get the start date for the subject
+    start_date = get_subject_start_date(subject)
+    # convert yesterday to string
+    end_date = yesterday.strftime('%Y-%m-%d')
+    Proximal().get_weekly_proximal_data(subject, end_date, start_date, threshold_dict[subject])
+
+# get_baseline_stats_for_all()
  

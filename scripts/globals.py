@@ -2,11 +2,14 @@ import json
 import os
 
 PATH_TO_INFO = '/home/hle5/mhealth-sci-dashboard/static/json/participant.json'
+PATH_TO_COMPUTED = '/home/hle5/sciJitaiScript/reports/computed.json'
 #read the json file
 json_object = json.load(open(PATH_TO_INFO))
 
 # get all the keys in the json file as participant ids
 subjects = list(json_object.keys())
+# reverse the list
+subjects.reverse()
 
 # create a dictionary of participant ids and their corresponding info
 auc_dict = {}
@@ -34,26 +37,47 @@ sustainability_dict = {}
 for user_id in subjects:
     sustainability_dict[user_id] = json_object[user_id][0]['phase_3']
     
+def add_date_to_computed(pid, date):
+    # read the json file
+    json_object = json.load(open(PATH_TO_COMPUTED))
+    # check if the date is in the pid's list of computed dates
+    if date not in json_object[pid]:
+        # if not, add it
+        json_object[pid].append(date)
+        # write to the json file
+        with open(PATH_TO_COMPUTED, 'w') as outfile:
+            json.dump(json_object, outfile)
+            # close the json file
+            outfile.close()
+    else:
+        # if yes, do nothing
+        pass
     
-def delete_unzipped_files(userid):
-    path = '/opt/sci_jitai/' + f"{userid}@scijitai_com/logs-watch/"
-    # check if the path exists
-    if not os.path.exists(path):
-        return
-    # list out all the folders
-    folders = os.listdir(path)
+def check_if_computed(pid, date):
+    # read the json file
+    try:
+        json_object = json.load(open(PATH_TO_COMPUTED))
+    except Exception as e:
+        # create empty json object
+        json_object = {}
+    # check if pid is in the json object
+    if pid not in json_object:
+        # if not, add it
+        json_object[pid] = []
+        # write to the json file
+        with open(PATH_TO_COMPUTED, 'w') as outfile:
+            json.dump(json_object, outfile)
+            # close the json file
+            outfile.close()
+            
+    # check if the date is in the pid's list of computed dates
+    if date in json_object[pid]:
+        # if yes, return True
+        return True
+    else:
+        # if not, return False
+        return False
     
-    # for each folder, remove all non_zip files and folders inside it
-    for folder in folders:
-        # list all folders inside the folder
-        datefolders = os.listdir(path + folder)
-        for f in datefolders:
-            # if the folder is not a zip file, remove it
-            if not f.endswith('.zip'):
-                try:
-                    # need to sudo remove the folder
-                    os.system(f"sudo rm -rf {path}{folder}/{f}")
-                    print(f"Removed {path}{folder}/{f}")
-                except Exception as e:
-                    print(e)
-                    print(f"Error removing {path}{folder}/{f}")
+def get_subject_start_date(pid):
+    return start_dates_dict[pid]
+    

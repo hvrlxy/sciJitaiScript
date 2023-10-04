@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import datetime
-from unzip_all import UnZip
 import os
 from logger import Logger
 from schedule import Schedule
@@ -18,14 +17,8 @@ class Compliance:
         # initialize the project root
         self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/..'
 
-        # initialize the data path
-        self.DATA_PATH = '/opt/sci_jitai/'
-
         # initialize the schedule path
         self.SCHEDULE_PATH = self.ROOT_DIR + '/reports/schedule/'
-
-        # initialize the unzip class
-        self.unzip = UnZip()
 
         # initialize the schedule class
         self.schedule = Schedule()
@@ -128,7 +121,7 @@ class Compliance:
 
     def add_battery_check(self, user, date, scheduled_prompt_epoch):
         # get the battery log file in the Common folder
-        battery_log_file = self.DATA_PATH + f'{user}@scijitai_com/logs-watch/{date}/Common/Watch-BatteryLogger.log.csv'
+        battery_log_file = '/home/hle5/sciJitaiScript/logs-watch/Common/Watch-BatteryLogger.log.csv'
         try:
             # read the battery log file
             battery_df = pd.read_csv(battery_log_file, names=['datetime', 'info', 'battery_level', 'charging'])
@@ -153,7 +146,7 @@ class Compliance:
         # format it to have 2 digits
         hour = f'0{hour}' if len(hour) == 1 else hour
         # list all the folders in date folder
-        folders = os.listdir(self.DATA_PATH + f'{user}@scijitai_com/logs-watch/{date}')
+        folders = os.listdir('/home/hle5/sciJitaiScript/logs-watch/')
         # filter out the folders that start with hour
         folders = list(filter(lambda x: x.startswith(hour), folders))
         # remove the one ends with .zip
@@ -163,7 +156,7 @@ class Compliance:
         # get the folder name
         folder = folders[0]
         # get the battery log file in the Common folder
-        dnd_path = self.DATA_PATH + f'{user}@scijitai_com/logs-watch/{date}/{folder}/Watch-PromptScheduler.log.csv'
+        dnd_path = f'/home/hle5/sciJitaiScript/logs-watch/logs-watch//{folder}/Watch-PromptScheduler.log.csv'
         try:
             # read the battery log file
             dnd_df = pd.read_csv(dnd_path, names=['datetime', 'info', 'message', 'unknown'])
@@ -219,6 +212,7 @@ class Compliance:
         #check if the user folder exists, if not, create it
         if not os.path.exists(self.ROOT_DIR + f'/reports/compliance/{user}/'):
             os.makedirs(self.ROOT_DIR + f'/reports/compliance/{user}/')
+            
         # save the compliance report to csv
         compliance_df.to_csv(self.ROOT_DIR + f'/reports/compliance/{user}/{date}.csv')
         return compliance_df

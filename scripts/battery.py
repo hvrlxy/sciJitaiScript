@@ -62,50 +62,15 @@ class Battery:
         unzip the raw auc file
         :return: None
         '''
-        subject_full = subject + "@scijitai_com"
-        # initialize the battery_df with columns: HEADER_TIME_STAMP,START_TIME,STOP_TIME,BATTERY_LEVEL,BATTERY_CHARGING
-        battery_df = pd.DataFrame(columns=['timestamp', 'epoch', 'battery_level'])
-        # unzip the raw auc file
-        self.unzip.unzip_logs_watch_folder(subject=subject, date=date)
-
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(date, '%Y-%m-%d')
-            #nget the year 
-            year = int(date.split('-')[0])
-        except ValueError:
-            logger.error("get_battery_data(): Incorrect data format, should be YYYY-MM-DD")
-            logger.error(traceback.format_exc())
-            return battery_df
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("get_battery_data(): Subject not found in data/raw folder")
-            raise ValueError("get_battery_data(): Subject not found in data/raw folder")
-
-        # check if the date is in the subject folder
-        if date not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("get_battery_data(): date not found in subject logs-watch folder")
-            logger.error(traceback.format_exc())
-            return battery_df
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, date)
-        except Exception as e:
-            logger.error("get_battery_data(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            logger.error(traceback.format_exc())
-            return battery_df
-        logger.info(f"get_battery_data(): Unzipping logs-watch folder for {subject} on {date} done")
-
+        #get the year from the date
+        year = int(date.split('-')[0])
         # search for the Common folder inside the logs-watch/date folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + date + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("get_battery_data(): Common folder not found in subject logs-watch folder")
             logger.error(traceback.format_exc())
-            return battery_df
+            return pd.DataFrame(columns=['timestamp', 'info', 'battery_level', 'charging'])
 
         # search for the Watch-GoalSettingsEMA.log.csv file inside the Common folder
         battery_file_path = common_folder_path + 'Watch-BatteryLogger.log.csv'

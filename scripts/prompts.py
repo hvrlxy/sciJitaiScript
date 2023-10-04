@@ -5,7 +5,6 @@ from unzip_all import UnZip
 import os
 import logging
 import traceback
-from globals import delete_unzipped_files
 
 # get today's date as format YYYY-MM-DD
 today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -53,36 +52,9 @@ class Prompts:
         :param date: str
         :return: pd.DataFrame
         '''
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_goal_settings_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_goal_settings_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_goal_settings_df(): Subject not found in data/raw folder")
-            raise ValueError("read_goal_settings_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_goal_settings_df(): Day not found in subject logs-watch folder")
-            raise ValueError(f"read_goal_settings_df(): {day} not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_goal_settings_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_goal_settings_df(): Unzipping logs-watch folder for {subject} on {day} done")
 
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_goal_settings_df(): Common folder not found in subject logs-watch folder")
@@ -125,36 +97,8 @@ class Prompts:
         :param date: str
         :return: pd.DataFrame
         '''
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_jitai1_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_jitai1_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_jitai1_df(): Subject not found in data/raw folder")
-            raise ValueError("read_jitai1_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_jitai1_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_jitai1_df(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_jitai1_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_jitai1_df(): Unzipping logs-watch folder for {subject} on {day} done")
-
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_jitai1_df(): Common folder not found in subject logs-watch folder")
@@ -192,36 +136,8 @@ class Prompts:
         return jitai1_df
 
     def read_jitai2_df(self, subject, day):
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_jitai2_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_jitai2_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_jitai2_df(): Subject not found in data/raw folder")
-            raise ValueError("read_jitai2_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_jitai2_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_jitai2_df(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_jitai2_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_jitai2_df(): Unzipping logs-watch folder for {subject} on {day} done")
-
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_jitai2_df(): Common folder not found in subject logs-watch folder")
@@ -259,36 +175,8 @@ class Prompts:
         return jitai2_df
 
     def read_eod_df(self, subject, day):
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_eod_df(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_eod_df(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_eod_df(): Subject not found in data/raw folder")
-            raise ValueError("read_eod_df(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_eod_df(): Day not found in subject logs-watch folder")
-            raise ValueError("read_eod_df(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_eod_df(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_eod_df(): Unzipping logs-watch folder for {subject} on {day} done")
-
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_eod_df(): Common folder not found in subject logs-watch folder")
@@ -326,36 +214,8 @@ class Prompts:
         return eod_df
     
     def read_WI_message(self, subject, day):
-        subject_full = subject + '@scijitai_com'
-        # check if the day format is YYYY-MM-DD by converting it to datetime
-        try:
-            datetime.datetime.strptime(day, '%Y-%m-%d')
-        except ValueError:
-            logger.error("read_WI_message(): Incorrect data format, should be YYYY-MM-DD")
-            raise ValueError("read_WI_message(): Incorrect data format, should be YYYY-MM-DD")
-
-        # check if the subject is in the data/raw folder
-        if subject_full not in os.listdir(self.DATA_PATH):
-            logger.error("read_WI_message(): Subject not found in data/raw folder")
-            raise ValueError("read_WI_message(): Subject not found in data/raw folder")
-
-        # check if the day is in the subject folder
-        if day not in os.listdir(self.DATA_PATH + subject_full + '/logs-watch/'):
-            logger.error("read_WI_message(): Day not found in subject logs-watch folder")
-            raise ValueError("read_WI_message(): Day not found in subject logs-watch folder")
-
-        # unzipping the logs-watch folder
-        try:
-            self.unzip.unzip_logs_watch_folder(subject, day)
-        except Exception as e:
-            logger.error("read_WI_message(): Error unzipping logs-watch folder")
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
-            raise ValueError(f'Error unzipping {subject} on {day}')
-        logger.info(f"read_WI_message(): Unzipping logs-watch folder for {subject} on {day} done")
-
         # search for the Common folder inside the logs-watch/day folder
-        common_folder_path = self.DATA_PATH + subject_full + '/logs-watch/' + day + '/Common/'
+        common_folder_path = '/home/hle5/sciJitaiScript/logs-watch/Common/'
         # check if the Common folder exists
         if not os.path.exists(common_folder_path):
             logger.error("read_WI_message(): Common folder not found in subject logs-watch folder")
@@ -413,17 +273,25 @@ class Prompts:
 
         return all_message_df
 
+    def process_user_at_date(self, user, day):
+        try:
+            logger.info(f"process_all_user(): Processing {user} on {day}")
+            self.read_all_message_df(user, day)
+            return True
+        except Exception as e:
+            logger.error(f"process_all_user(): Error processing {user} on {day}")
+            logger.error(traceback.format_exc())
+            return False
+        
     def process_all_user(self, day, user_list = ['user01', 'user02', 'user03']):
         for user in user_list:
             try:
                 logger.info(f"process_all_user(): Processing {user} on {day}")
                 self.read_all_message_df(user, day)
-                delete_unzipped_files(user)
             except Exception as e:
                 logger.error(f"process_all_user(): Error processing {user} on {day}")
                 logger.error(traceback.format_exc())
                 # print(traceback.format_exc())
-                delete_unzipped_files(user)
                 continue
 
 
