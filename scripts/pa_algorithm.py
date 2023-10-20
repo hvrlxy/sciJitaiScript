@@ -76,12 +76,14 @@ class PAbouts:
                 pa_df = pd.read_csv(pa_df_path)
                 # convert the epoch column to int
                 pa_df['epoch'] = pa_df['epoch'].astype(int)
-                # get the number of rows where the PA is greater than the rows before it
-                bouts = pa_df[pa_df['PA'] > pa_df['PA'].shift(1)].shape[0] * 1.5
+                
                 # if the number of rows is 0, then return None for bouts
                 if pa_df.shape[0] == 0:
                     return None, None
                 else:
+                    # get the last row of the pa_df pa
+                    last_row = pa_df.iloc[-1]
+                    bouts = last_row['PA']
                     return pa_df, bouts
             else:
                 return None, None

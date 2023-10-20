@@ -8,6 +8,7 @@ from compliance import Compliance
 import traceback
 import warnings
 from pa_algorithm import PAbouts
+from globals import *
 
 warnings.filterwarnings("ignore")
 
@@ -173,6 +174,8 @@ class Proximal:
         
         # generate all the dates from start_date to last_date in format YYYY-MM-DD
         date_list = [start_date + datetime.timedelta(days=x) for x in range((last_date-start_date).days + 1)]
+        baseline_date = get_baseline_date_list(userID)
+        # print(baseline_date)
         # loop from 6 days ago to 0 days ago
         for date in date_list:
             try:
@@ -206,6 +209,8 @@ class Proximal:
             else:
                 jitai1_status, jitai2_status, goal_type, jit1_type, jit2_type = "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA", "NO_DATA"
 
+            if date in baseline_date:
+                goal_type = "BASELINE"
             # append the data to the dataframe
             result_df = result_df.append({'date': date, 
                                             'goal_type': goal_type,
@@ -233,4 +238,4 @@ class Proximal:
         result_df.to_csv(self.ROOT_DIR + f'/reports/proximal/{userID}.csv', index=False)
         return result_df
 
-# print(Proximal().get_weekly_proximal_data("scijitai_05", "2023-10-03", "2023-06-23", 2000))
+# print(Proximal().get_weekly_proximal_data("scijitai_06", "2023-10-03", "2023-07-05", 2000))

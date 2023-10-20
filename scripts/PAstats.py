@@ -80,4 +80,4 @@ def get_baseline_stats_for_all():
     baseline_df.to_csv("/home/hle5/sciJitaiScript/reports/baseline_stats.csv")    
     return baseline_df
 
-print(get_baseline_stats_for_all())
+# print(get_baseline_stats_for_all())

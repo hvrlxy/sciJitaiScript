@@ -67,38 +67,42 @@ def process_data_pid_at_date(pid, date, recomputed = False):
         logger.info('Data for pid: ' + pid + ' at date: ' + date + ' has already been computed')
         return
     delete_logs_watch_folder()
-    #rsync the watch logs for the pid at date
-    get_watch_logs_for_pid(pid, date)
-    computed = True
     try:
-        # first compute the schedule for the pid at date
-        computed = schedule.process_schedule_pid_at_date(pid, date) and computed
+        #rsync the watch logs for the pid at date
+        get_watch_logs_for_pid(pid, date)
+        computed = True
+        try:
+            # first compute the schedule for the pid at date
+            computed = schedule.process_schedule_pid_at_date(pid, date) and computed
+        except Exception as e:
+            logger.error('main.py::Error processing schedule for pid: ' + pid + ' at date: ' + date)
+            
+        try:
+            # next compute the prompts for the pid at date
+            computed = prompts.process_user_at_date(pid, date) and computed
+        except Exception as e:
+            logger.error('main.py::Error processing prompts for pid: ' + pid + ' at date: ' + date)
+            
+        try:
+            # next compute the compliance for the pid at date
+            computed = (compliance.save_compliance_report(pid, date) is not None) and computed
+        except Exception as e:
+            logger.error('main.py::Error processing compliance for pid: ' + pid + ' at date: ' + date)
+        # next compute the plot for the pid at date
+        try:
+            plot_subject.plot_subject(pid, date, int(auc_dict[pid]))
+        except Exception as e:
+            logger.error('main.py::Error processing plot for pid: ' + pid + ' at date: ' + date)
+            
+        # check if the Common folder exists in the logs folder
+        if os.path.exists('/home/hle5/sciJitaiScript/logs-watch/Common'):
+            # add the pid and date to the computed list
+            add_date_to_computed(pid, date)
+            # print the computed message
+            print('Data for pid: ' + pid + ' at date: ' + date + ' has been added to computed json')
     except Exception as e:
-        logger.error('main.py::Error processing schedule for pid: ' + pid + ' at date: ' + date)
-        
-    try:
-        # next compute the prompts for the pid at date
-        computed = prompts.process_user_at_date(pid, date) and computed
-    except Exception as e:
-        logger.error('main.py::Error processing prompts for pid: ' + pid + ' at date: ' + date)
-        
-    try:
-        # next compute the compliance for the pid at date
-        computed = (compliance.save_compliance_report(pid, date) is not None) and computed
-    except Exception as e:
-        logger.error('main.py::Error processing compliance for pid: ' + pid + ' at date: ' + date)
-    # next compute the plot for the pid at date
-    try:
-        plot_subject.plot_subject(pid, date, int(auc_dict[pid]))
-    except Exception as e:
-        logger.error('main.py::Error processing plot for pid: ' + pid + ' at date: ' + date)
-        
-    # check if the Common folder exists in the logs folder
-    if os.path.exists('/home/hle5/sciJitaiScript/logs-watch/Common'):
-        # add the pid and date to the computed list
-        add_date_to_computed(pid, date)
-        # print the computed message
-        print('Data for pid: ' + pid + ' at date: ' + date + ' has been added to computed json')
+        print('main.py::Error processing data for pid: ' + pid + ' at date: ' + date)
+    delete_logs_watch_folder()
 
 recomputed_pid = []
 for subject in subjects:
@@ -125,5 +129,4 @@ for subject in subjects:
     end_date = yesterday.strftime('%Y-%m-%d')
     Proximal().get_weekly_proximal_data(subject, end_date, start_date, threshold_dict[subject])
 
-# get_baseline_stats_for_all()
- 
+get_baseline_stats_for_all()
