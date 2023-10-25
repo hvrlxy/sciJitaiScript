@@ -105,6 +105,7 @@ def process_data_pid_at_date(pid, date, recomputed = False):
     delete_logs_watch_folder()
 
 recomputed_pid = []
+# subjects = ['scijitai_12']
 for subject in subjects:
     #get the start date for the subject
     start_date = get_subject_start_date(subject)
@@ -114,6 +115,7 @@ for subject in subjects:
     date_list = [date.strftime('%Y-%m-%d') for date in date_list]
     #reverse the date list
     date_list.reverse()
+    # date_list = ["2023-10-16", "2023-10-17", "2023-10-18", "2023-10-19", "2023-10-20", "2023-10-21", "2023-10-22"]
     for date in date_list:
         try:
             process_data_pid_at_date(subject, date, recomputed=subject in recomputed_pid)

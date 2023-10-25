@@ -251,27 +251,30 @@ class Prompts:
         return wi_df
 
     def read_all_message_df(self, subject, day):
-        goal_settings_df = self.read_goal_settings_df(subject, day)
-        jitai1_df = self.read_jitai1_df(subject, day)
-        jitai2_df = self.read_jitai2_df(subject, day)
-        eod_df = self.read_eod_df(subject, day)
-        wi_df = self.read_WI_message(subject, day)
+        try:
+            goal_settings_df = self.read_goal_settings_df(subject, day)
+            jitai1_df = self.read_jitai1_df(subject, day)
+            jitai2_df = self.read_jitai2_df(subject, day)
+            eod_df = self.read_eod_df(subject, day)
+            wi_df = self.read_WI_message(subject, day)
 
-        all_message_df = pd.concat([goal_settings_df, jitai1_df, jitai2_df, eod_df, wi_df])
-        all_message_df = all_message_df.sort_values(by=['timestamp'])
-        #remove all columns with names starting with 'unknown'
-        all_message_df = all_message_df.loc[:, ~all_message_df.columns.str.startswith('unknown')]
+            all_message_df = pd.concat([goal_settings_df, jitai1_df, jitai2_df, eod_df, wi_df])
+            all_message_df = all_message_df.sort_values(by=['timestamp'])
+            #remove all columns with names starting with 'unknown'
+            all_message_df = all_message_df.loc[:, ~all_message_df.columns.str.startswith('unknown')]
 
-        # check if the day folder exists in the shcedule folder
-        if day not in os.listdir(self.SCHEDULE_PATH):
-            # create the day folder in the schedule folder
-            os.mkdir(self.SCHEDULE_PATH + day)
-            logger.info(f"read_all_message_df(): Created {day} folder in schedule folder")
+            # check if the day folder exists in the shcedule folder
+            if day not in os.listdir(self.SCHEDULE_PATH):
+                # create the day folder in the schedule folder
+                os.mkdir(self.SCHEDULE_PATH + day)
+                logger.info(f"read_all_message_df(): Created {day} folder in schedule folder")
 
-        # save the all_message_df to a csv file
-        all_message_df.to_csv(self.SCHEDULE_PATH + day + '/' + subject + '.csv', index=False)
+            # save the all_message_df to a csv file
+            all_message_df.to_csv(self.SCHEDULE_PATH + day + '/' + subject + '.csv', index=False)
 
-        return all_message_df
+            return all_message_df
+        except Exception as e:
+            return None
 
     def process_user_at_date(self, user, day):
         try:

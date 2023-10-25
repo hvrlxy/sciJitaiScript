@@ -35,7 +35,6 @@ class Compliance:
         if prompts_df is None:
             # create an empty dataframe
             prompts_df = pd.DataFrame(columns=['timestamp', 'epoch', 'message_type', 'status'])
-        
         #convert message_type "jitai1" to "first_message"
         prompts_df['message_type'] = prompts_df['message_type'].replace('jitai1', 'first_jitai')
         #convert message_type "jitai2" to "second_message"
@@ -93,6 +92,7 @@ class Compliance:
             compliance_df.loc[len(compliance_df)-1, 'scheduled_prompt'] = datetime.datetime.fromtimestamp(compliance_df.loc[len(compliance_df)-1, 'scheduled_prompt_epoch']/1000).strftime('%H:%M')
         compliance_df['status'] = compliance_df['status'].replace(True, 'ANS')
         compliance_df['status'] = compliance_df['status'].replace(False, 'NOT_ANS')
+        
         return compliance_df
     
     def add_late(self, user, date):
@@ -126,8 +126,10 @@ class Compliance:
             # read the battery log file
             battery_df = pd.read_csv(battery_log_file, names=['datetime', 'info', 'battery_level', 'charging'])
             # replace AST with EDT in datetime
-            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: x.replace('AST', 'EDT'))
-            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: x.replace('CDT', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('AST', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('CDT', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('GMT+08:00', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('PDT', 'EDT'))
             #convert datetime from format %a %b %d %H:%M:%S %Z %Y to epoch milliseconds
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%a %b %d %H:%M:%S %Z %Y').timestamp() * 1000)
             # get the row with the closest datetime to the scheduled_prompt_epoch

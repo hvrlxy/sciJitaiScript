@@ -77,9 +77,9 @@ class Proximal:
         It will return the proximal value for the given epoch and the timestamp of the proximal value
         '''
         if epoch == 0:
-            return None, None
+            return None, epoch
         if pa_df is None:
-            return None, None
+            return None, epoch
         # turn the values in pa_df to int
         pa_df['epoch'] = pa_df['epoch'].astype(int)
         #remove all rows with epoch lower than the epoch 
@@ -87,10 +87,10 @@ class Proximal:
         # get the row with epoch higer but closest to the given epoch
         pa_row = pa_df.iloc[(pa_df['epoch']-epoch).abs().argsort()[:1]]
         try:
-            # return the PA value and the epoch
             return pa_row['PA'].iloc[0], pa_row['epoch'].iloc[0]
         except Exception:
-            return None, None
+            # print("Error processing proximal data for epoch: " + str(epoch))
+            return None, epoch
     
     def get_total_pa_at_date(self, userID, date):
         # get the battery log file in the Common folder
@@ -116,23 +116,34 @@ class Proximal:
         epoch_list = list(range(first_epoch, first_epoch + 24*60*60*1000, 90*1000))
         # get the pa_df
         pa_df, total_pa = obj.calculate_PA(epoch_list, baseline, userID, date)
+    
+        #pa_next_day get the pa_df for the next day
+        pa_next_day, _ = obj.calculate_PA(epoch_list, baseline, userID, (datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(days=1)).strftime('%Y-%m-%d'))
+        if pa_next_day is not None and total_pa is not None:
+            # add total_pa to the pa_next_day's column
+            pa_next_day['PA'] = pa_next_day['PA'].apply(lambda x: x + total_pa)
+        #pa_concat is the concatenation of pa_df and pa_next_day
+        try:
+            pa_concat = pd.concat([pa_df, pa_next_day])
+        except Exception as e:
+            pa_concat = pa_df
 
         if compliance_df is None:
             return "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", total_pa
         first_jitai, second_jitai = self.get_jitai_info(userID, date, compliance_df)
         # process the first jitai
-        first_jitai_value, first_jitai_timestamp = self.process_proximal_with_timestamp(pa_df, first_jitai)
+        first_jitai_value, first_jitai_timestamp = self.process_proximal_with_timestamp(pa_concat, first_jitai)
         # process the second jitai
-        second_jitai_value, second_jitai_timestamp = self.process_proximal_with_timestamp(pa_df, second_jitai)
+        second_jitai_value, second_jitai_timestamp = self.process_proximal_with_timestamp(pa_concat, second_jitai)
         if first_jitai != 0:
             # get the value 2 hours after the first jitai
-            first_jitai_value_2h,_ = self.process_proximal_with_timestamp(pa_df, first_jitai + 2*60*60*1000)
+            first_jitai_value_2h,_ = self.process_proximal_with_timestamp(pa_concat, first_jitai + 2*60*60*1000)
         else:
             first_jitai_value_2h = None
             
         if second_jitai != 0:
             # get the value 2 hours after the second jitai
-            second_jitai_value_2h,_ = self.process_proximal_with_timestamp(pa_df, second_jitai + 2*60*60*1000)
+            second_jitai_value_2h,_ = self.process_proximal_with_timestamp(pa_concat, second_jitai + 2*60*60*1000)
         else:
             second_jitai_value_2h = None
         # return the first jitai value, first jitai timestamp, second jitai value, second jitai timestamp
@@ -151,6 +162,22 @@ class Proximal:
         except Exception as e:
             return None
         
+    def number_of_minutes(self, pid, date):
+        pa_df_path = f'/home/hle5/sciJitaiScript/reports/pa_df/{pid}/{date}.csv'
+        if os.path.isfile(pa_df_path) == False:
+            return 0
+        # read the pa_df into a dataframe
+        pa_df = pd.read_csv(pa_df_path, names = ["index", "epoch", "value"])
+        # delete the first row
+        pa_df = pa_df.iloc[1:]
+        #convert the epoch to int
+        pa_df['epoch'] = pa_df['epoch'].apply(lambda x: float(x))
+        pa_df['value'] = pa_df['value'].apply(lambda x: float(x))
+        # remove rows with values within 10000 from the previous row
+        pa_df = pa_df[pa_df['epoch'] - pa_df['epoch'].shift(1) > 50000]
+        # count the number of rows in the dataframe, multiply with 1.5 minutes
+        return (len(pa_df))*1.5
+
     def get_weekly_proximal_data(self, userID, last_date, start_date, baseline = 2000):
         # convert the date to datetime
         last_date = datetime.datetime.strptime(last_date, '%Y-%m-%d')
@@ -170,7 +197,8 @@ class Proximal:
                                             'jit2_status',
                                           'jit2_pa',
                                             'jit2_pa_2h',
-                                            "total_pa"])
+                                            "total_pa", 
+                                            "total_mins"])
         
         # generate all the dates from start_date to last_date in format YYYY-MM-DD
         date_list = [start_date + datetime.timedelta(days=x) for x in range((last_date-start_date).days + 1)]
@@ -226,7 +254,8 @@ class Proximal:
                                           'jit2_pa': second_jitai_value,
                                           'jit1_pa_2h': first_jitai_value_2h,
                                           'jit2_pa_2h': second_jitai_value_2h,
-                                          "total_pa": total_pa}, 
+                                          "total_pa": total_pa,
+                                          "total_mins": self.number_of_minutes(userID, date)}, 
                                           ignore_index=True)
             compliance_df = None
         
@@ -238,4 +267,4 @@ class Proximal:
         result_df.to_csv(self.ROOT_DIR + f'/reports/proximal/{userID}.csv', index=False)
         return result_df
 
-# print(Proximal().get_weekly_proximal_data("scijitai_06", "2023-10-03", "2023-07-05", 2000))
+# print(Proximal().get_weekly_proximal_data("scijitai_15", "2023-09-09", "2023-09-08", 2000))

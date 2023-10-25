@@ -129,10 +129,14 @@ class Schedule:
     def process_schedule_generation(self, subject: str, day: str):
         schedule_generation_df = self.generate_day_schedule(subject, day)
         try:
+            # print(schedule_generation_df["timestamp"])
             #replace any AST in timestamp with EST
-            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('AST', 'EST')
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('AST', 'EST'))
             #replace any AST in timestamp with EST
-            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].str.replace('CDT', 'EST')
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('CDT', 'EST'))
+            #replace any AST in timestamp with EST
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('GMT+08:00', 'EST'))
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('PDT', 'EST'))
             # get the first item in the timestamp column
             timestamp = schedule_generation_df.iloc[0]['timestamp']
         except Exception as e:
@@ -143,7 +147,6 @@ class Schedule:
         timestamp = datetime.datetime.strptime(timestamp, '%a %b %d %H:%M:%S %Z %Y')
         # convert timestamp to string format YYYY-MM-DD
         timestamp = timestamp.strftime('%Y-%m-%d')
-
         # get the week
         week = self.extract_info_from_schedule_df(schedule_generation_df, 'week')
         dayIndex = self.extract_info_from_schedule_df(schedule_generation_df, 'day')
