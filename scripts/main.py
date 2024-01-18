@@ -102,27 +102,26 @@ def process_data_pid_at_date(pid, date, recomputed = False):
             print('Data for pid: ' + pid + ' at date: ' + date + ' has been added to computed json')
     except Exception as e:
         print('main.py::Error processing data for pid: ' + pid + ' at date: ' + date)
-    delete_logs_watch_folder()
+    # delete_logs_watch_folder()
 
-recomputed_pid = []
-# subjects = ['scijitai_12']
-for subject in subjects:
-    #get the start date for the subject
-    start_date = get_subject_start_date(subject)
-    #get the list of date from start date to yesterday
-    date_list = pd.date_range(start_date, yesterday).tolist()
-    # convert the date list to string
-    date_list = [date.strftime('%Y-%m-%d') for date in date_list]
-    #reverse the date list
-    date_list.reverse()
-    # date_list = ["2023-10-16", "2023-10-17", "2023-10-18", "2023-10-19", "2023-10-20", "2023-10-21", "2023-10-22"]
-    for date in date_list:
-        try:
-            process_data_pid_at_date(subject, date, recomputed=subject in recomputed_pid)
-        except Exception as e:
-            #print the traceback
-            print('main.py::Error processing data for pid: ' + subject + ' at date: ' + date)
-            logger.error(traceback.format_exc())
+# recomputed_pid = []
+# # subjects = ['scijitai_31']
+# for subject in subjects:
+#     #get the start date for the subject
+#     start_date = get_subject_start_date(subject)
+#     #get the list of date from start date to yesterday
+#     date_list = pd.date_range(start_date, yesterday).tolist()
+#     # convert the date list to string
+#     date_list = [date.strftime('%Y-%m-%d') for date in date_list]
+#     #reverse the date list
+#     # date_list.reverse()
+#     for date in date_list:
+#         try:
+#             process_data_pid_at_date(subject, date, recomputed=subject in recomputed_pid)
+#         except Exception as e:
+#             #print the traceback
+#             print('main.py::Error processing data for pid: ' + subject + ' at date: ' + date)
+#             print(traceback.format_exc())
     
 for subject in subjects:
     #get the start date for the subject

@@ -11,7 +11,7 @@ json_object = json.load(open(PATH_TO_INFO))
 # get all the keys in the json file as participant ids
 subjects = list(json_object.keys())
 # reverse the list
-subjects.reverse()
+# subjects.reverse()
 
 # create a dictionary of participant ids and their corresponding info
 auc_dict = {}

@@ -270,13 +270,18 @@ class PlotSubject:
         # convert to EST timezone
         auc_df['epoch'] = auc_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
 
-        # get the prompts_df
-        prompts_df = self.retrieve_prompts_df(subject, day)
-        # convert the epoch to datetime from epoch milliseconds
-        prompts_df['epoch'] = pd.to_datetime(prompts_df['epoch'], unit='ms')
-        # convert to EST timezone
-        prompts_df['epoch'] = prompts_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
-
+        try:
+            # get the prompts_df
+            prompts_df = self.retrieve_prompts_df(subject, day)
+            # convert the epoch to datetime from epoch milliseconds
+            prompts_df['epoch'] = pd.to_datetime(prompts_df['epoch'], unit='ms')
+            # convert to EST timezone
+            prompts_df['epoch'] = prompts_df['epoch'].dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
+        except Exception as e:
+            prompts_df = pd.DataFrame(columns=['timestamp', 'epoch', 'message_type'])
+            logger.error(f"plot_subject(): No prompts on day {day} for {subject}")
+            logger.error(traceback.format_exc())
+            
         # get the schedule_df
         try:
             schedule_df = self.schedule.process_schedule_generation(subject, day)
