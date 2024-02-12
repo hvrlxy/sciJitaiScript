@@ -130,6 +130,8 @@ class Compliance:
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('CDT', 'EDT'))
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('GMT+08:00', 'EDT'))
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('PDT', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('PST', 'EDT'))
+            battery_df['datetime'] = battery_df['datetime'].apply(lambda x: str(x).replace('CST', 'EDT'))
             #convert datetime from format %a %b %d %H:%M:%S %Z %Y to epoch milliseconds
             battery_df['datetime'] = battery_df['datetime'].apply(lambda x: datetime.datetime.strptime(x, '%a %b %d %H:%M:%S %Z %Y').timestamp() * 1000)
             # get the row with the closest datetime to the scheduled_prompt_epoch

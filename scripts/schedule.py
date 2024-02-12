@@ -137,6 +137,8 @@ class Schedule:
             #replace any AST in timestamp with EST
             schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('GMT+08:00', 'EST'))
             schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('PDT', 'EST'))
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('PST', 'EST'))
+            schedule_generation_df['timestamp'] = schedule_generation_df['timestamp'].apply(lambda x: str(x).replace('CST', 'EST'))
             # get the first item in the timestamp column
             timestamp = schedule_generation_df.iloc[0]['timestamp']
         except Exception as e:

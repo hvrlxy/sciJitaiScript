@@ -10,34 +10,38 @@ json_object = json.load(open(PATH_TO_INFO))
 
 # get all the keys in the json file as participant ids
 subjects = list(json_object.keys())
+# filtered out subject with status != ONGOING
+all_subjects = [subject for subject in subjects]
+subjects = [subject for subject in subjects if json_object[subject]['0']['status'] == 'ONGOING']
+
 # reverse the list
 # subjects.reverse()
 
 # create a dictionary of participant ids and their corresponding info
 auc_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     auc_dict[user_id] = json_object[user_id]['0']['AUC']
     
 start_dates_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     start_dates_dict[user_id] = json_object[user_id]['0']['start_date']
     
 threshold_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     threshold_dict[user_id] = int(json_object[user_id]['0']['AUC'])
     
     
 intervention_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     intervention_dict[user_id] = json_object[user_id]['0']['phase_2']
 
 # print(intervention_dict)
 baseline_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     baseline_dict[user_id] = json_object[user_id]['0']['phase_1']
 
 sustainability_dict = {}
-for user_id in subjects:
+for user_id in all_subjects:
     sustainability_dict[user_id] = json_object[user_id]['0']['phase_3']
     
 def add_date_to_computed(pid, date):

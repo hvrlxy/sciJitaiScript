@@ -258,7 +258,8 @@ class Proximal:
                                           "total_mins": self.number_of_minutes(userID, date)}, 
                                           ignore_index=True)
             compliance_df = None
-        
+        # remove all rows with total_mins = 0
+        result_df = result_df[result_df['total_mins'] != 0]
         # check if the proximal folder is create in the report folder
         if not os.path.exists(self.ROOT_DIR + f'/reports/proximal/'):
             # if not, create the folder
